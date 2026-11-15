@@ -1,0 +1,1 @@
+# Domain Layer is intentionally kept empty as this is a foundational shared library module rather than an independent microservice.

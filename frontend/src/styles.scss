@@ -1,0 +1,155 @@
+/* PrimeIcons */
+@import 'primeicons/primeicons.css';
+
+/* 全域重置與企業級排版 */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 企業級輸入元件標準化 */
+.p-inputtext,
+.p-dropdown {
+  border-radius: 6px !important;
+  border-color: #cbd5e1 !important;
+  font-size: 0.85rem !important;
+  transition: all 0.15s ease-in-out !important;
+
+  &:enabled:hover {
+    border-color: #94a3b8 !important;
+  }
+
+  &:enabled:focus,
+  &.p-focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+  }
+}
+
+.p-dropdown {
+  background: #ffffff !important;
+  .p-dropdown-label {
+    padding: 0.45rem 0.75rem !important;
+  }
+}
+
+.p-inputtext {
+  padding: 0.45rem 0.75rem !important;
+}
+
+/* 企業級主按鈕 (Corporate Blue) */
+.p-button {
+  border-radius: 6px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  padding: 0.45rem 0.85rem !important;
+  transition: all 0.15s ease !important;
+
+  &.p-button-primary {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+
+    &:hover {
+      background: #1d4ed8 !important;
+      border-color: #1d4ed8 !important;
+    }
+  }
+
+  &.p-button-outlined.p-button-secondary {
+    color: #475569 !important;
+    border-color: #cbd5e1 !important;
+
+    &:hover {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+  }
+}
+
+/* 對話框樣式覆寫 */
+.enterprise-dialog {
+  .p-dialog-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 1rem 1.25rem !important;
+
+    .p-dialog-title {
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+    }
+  }
+
+  .p-dialog-content {
+    padding: 1.25rem 1.25rem 2.5rem 1.25rem !important;
+  }
+
+  .p-dialog-footer {
+    border-top: 1px solid #f1f5f9 !important;
+    padding: 0.85rem 1.25rem !important;
+    background: #ffffff !important;
+  }
+}
+
+/* 下拉選單彈出層 (Dropdown Overlay) 確保層級最高且排版完整 */
+.p-dropdown-panel {
+  z-index: 2200 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+
+  .p-dropdown-items {
+    padding: 0.25rem !important;
+
+    .p-dropdown-item {
+      font-size: 0.85rem !important;
+      padding: 0.5rem 0.75rem !important;
+      border-radius: 4px !important;
+      margin: 1px 0 !important;
+
+      &.p-highlight {
+        background: #eff6ff !important;
+        color: #1d4ed8 !important;
+        font-weight: 600 !important;
+      }
+
+      &:not(.p-highlight):hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+      }
+    }
+  }
+}
+
+/* 通用工具類 */
+.w-full {
+  width: 100% !important;
+}
+
+/* RWD 通用彈窗與確認框適配 */
+.p-confirm-dialog {
+  max-width: 92vw !important;
+}
+
+@media (max-width: 640px) {
+  .enterprise-dialog {
+    .p-dialog-content {
+      padding: 1rem 1rem 1.5rem 1rem !important;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    .p-dialog-header {
+      padding: 0.85rem 1rem !important;
+    }
+  }
+}

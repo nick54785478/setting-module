@@ -1,0 +1,297 @@
+.enterprise-header {
+  height: 60px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  transition: padding 0.2s ease;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    min-width: 0;
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+      }
+    }
+
+    .breadcrumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      .crumb-root {
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .crumb-separator {
+        color: #cbd5e1;
+      }
+
+      .crumb-mid {
+        color: #64748b;
+      }
+
+      .crumb-active {
+        color: #0f172a;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-shrink: 0;
+
+    .tenant-selector-pill {
+      display: flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding-left: 0.65rem;
+
+      .pill-prefix {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #475569;
+        white-space: nowrap;
+      }
+
+      ::ng-deep .enterprise-tenant-dropdown {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        width: 155px;
+
+        .p-dropdown-label {
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #1d4ed8;
+          padding: 0.4rem 0.6rem;
+        }
+      }
+    }
+
+    .divider-vertical {
+      width: 1px;
+      height: 22px;
+      background: #e2e8f0;
+    }
+
+    .notification-btn {
+      position: relative;
+      background: transparent;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      cursor: pointer;
+      flex-shrink: 0;
+
+      &:hover {
+        background: #f8fafc;
+        color: #0f172a;
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 7px;
+        height: 7px;
+        background: #ef4444;
+        border-radius: 50%;
+      }
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 8px;
+      transition: background 0.15s;
+
+      &:hover {
+        background: #f8fafc;
+      }
+
+      .avatar-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .user-meta {
+        display: flex;
+        flex-direction: column;
+
+        .user-name {
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #1e293b;
+          line-height: 1.2;
+        }
+
+        .user-role {
+          font-size: 0.7rem;
+          color: #64748b;
+        }
+      }
+    }
+  }
+
+  /* RWD 響應式斷點設計 */
+  @media (max-width: 992px) {
+    padding: 0 1rem;
+
+    .header-left {
+      gap: 0.75rem;
+
+      .breadcrumb-nav {
+        .crumb-mid,
+        .crumb-mid-sep {
+          display: none;
+        }
+      }
+    }
+
+    .header-right {
+      gap: 0.65rem;
+
+      .tenant-selector-pill {
+        ::ng-deep .enterprise-tenant-dropdown {
+          width: 135px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .header-left {
+      .breadcrumb-nav {
+        .crumb-root,
+        .crumb-root-sep {
+          display: none;
+        }
+
+        .crumb-active {
+          font-size: 0.82rem;
+        }
+      }
+    }
+
+    .header-right {
+      .tenant-selector-pill {
+        padding-left: 0;
+
+        .pill-prefix {
+          display: none;
+        }
+
+        ::ng-deep .enterprise-tenant-dropdown {
+          width: 125px;
+        }
+      }
+
+      .user-profile {
+        .user-meta {
+          .user-role {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 540px) {
+    height: 54px;
+    padding: 0 0.65rem;
+
+    .header-left {
+      gap: 0.5rem;
+
+      .breadcrumb-nav {
+        display: none;
+      }
+    }
+
+    .header-right {
+      gap: 0.45rem;
+
+      .divider-vertical {
+        display: none;
+      }
+
+      .tenant-selector-pill {
+        ::ng-deep .enterprise-tenant-dropdown {
+          width: 105px;
+
+          .p-dropdown-label {
+            font-size: 0.76rem;
+            padding: 0.35rem 0.4rem;
+          }
+        }
+      }
+
+      .user-profile {
+        padding: 0;
+
+        .user-meta {
+          display: none;
+        }
+      }
+    }
+  }
+}

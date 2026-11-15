@@ -1,0 +1,39 @@
+# Maven / Java
+target/
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Node / Angular Frontend
+**/node_modules/
+node_modules/
+**/.angular/
+.angular/
+**/dist/
+dist/
+/tmp
+/out-tsc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs
+.idea/
+**/.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+**/.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache
+
+# OS / Logs
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+<div class="enterprise-layout">
+  <!-- 手機版選單背景遮罩 -->
+  <div
+    class="sidebar-backdrop"
+    [class.active]="mobileSidebarOpen"
+    (click)="closeMobileSidebar()"
+  ></div>
+
+  <!-- 左側選單 -->
+  <app-sidebar
+    [collapsed]="sidebarCollapsed"
+    [mobileOpen]="mobileSidebarOpen"
+    (toggleCollapse)="toggleSidebar()"
+    (closeMobile)="closeMobileSidebar()"
+  ></app-sidebar>
+
+  <!-- 右側內容區 -->
+  <div class="main-container">
+    <app-header
+      [sidebarCollapsed]="sidebarCollapsed"
+      (toggleSidebar)="toggleSidebar()"
+    ></app-header>
+
+    <main class="page-content">
+      <ng-content></ng-content>
+    </main>
+
+    <app-footer></app-footer>
+  </div>
+</div>

@@ -1,0 +1,57 @@
+<header class="enterprise-header">
+  <div class="header-left">
+    <button
+      class="icon-btn toggle-sidebar-btn"
+      (click)="toggleSidebar.emit()"
+      pTooltip="切換選單寬度"
+    >
+      <i class="pi pi-bars"></i>
+    </button>
+
+    <!-- 麵包屑導航 -->
+    <nav class="breadcrumb-nav">
+      <span class="crumb-root"><i class="pi pi-home"></i> 系統控制台</span>
+      <span class="crumb-separator crumb-root-sep">/</span>
+      <span class="crumb-mid">業務設定維運</span>
+      <span class="crumb-separator crumb-mid-sep">/</span>
+      <span class="crumb-active">{{ currentViewLabel }}</span>
+    </nav>
+  </div>
+
+  <div class="header-right">
+    <!-- 租戶切換器 (現階段鎖定 CW 租戶) -->
+    <div class="tenant-selector-pill" pTooltip="系統目前固定為 CW 租戶">
+      <div class="pill-prefix">
+        <i class="pi pi-building"></i>
+        <span>租戶</span>
+      </div>
+      <p-dropdown
+        [options]="tenantOptions"
+        [(ngModel)]="currentTenant"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="onTenantChange()"
+        [appendTo]="'body'"
+        [disabled]="true"
+        styleClass="enterprise-tenant-dropdown"
+      ></p-dropdown>
+    </div>
+
+    <div class="divider-vertical"></div>
+
+    <!-- 系統通知 -->
+    <button class="icon-btn notification-btn" pTooltip="系統訊息">
+      <i class="pi pi-bell"></i>
+      <span class="notification-badge"></span>
+    </button>
+
+    <!-- 使用者資訊區塊 -->
+    <div class="user-profile">
+      <div class="avatar-badge">AD</div>
+      <div class="user-meta">
+        <span class="user-name">Admin User</span>
+        <span class="user-role">系統管理員</span>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,422 @@
+<!-- Toast 浮水印訊息與刪除確認對話框 -->
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="enterprise-page">
+  <!-- 頁面標題列 -->
+  <div class="page-header">
+    <div class="header-info">
+      <h2 class="page-title">
+        <i class="pi pi-sliders-h title-icon"></i>
+        功能設定管理
+        <span class="page-tag">Function Configurable</span>
+      </h2>
+      <p class="page-desc">
+        集中管理多維定位坐標（Tenant &bull; Category &bull; SubCategory &bull; Code）、業務展示名稱與動態數值配置。
+      </p>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        label="重新整理"
+        icon="pi pi-refresh"
+        class="p-button-outlined p-button-secondary p-button-sm"
+        [loading]="loading"
+        (click)="loadData()"
+      ></button>
+      <button
+        pButton
+        label="新增設定項目"
+        icon="pi pi-plus"
+        class="p-button-primary p-button-sm"
+        (click)="openCreateDialog()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- 高級篩選查詢卡片 -->
+  <div class="enterprise-card filter-card">
+    <div class="card-title-bar">
+      <div class="title-left">
+        <i class="pi pi-search"></i>
+        <span>多條件動態過濾 (Specification)</span>
+      </div>
+      <div class="title-right">
+        <button
+          pButton
+          label="重置"
+          icon="pi pi-undo"
+          class="p-button-text p-button-secondary p-button-sm"
+          (click)="resetFilter()"
+        ></button>
+        <button
+          pButton
+          label="執行查詢"
+          icon="pi pi-search"
+          class="p-button-primary p-button-sm search-btn"
+          (click)="onSearch()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="filter-body">
+      <div class="filter-row">
+        <!-- 大維度 (Category) -->
+        <div class="form-group">
+          <label class="form-label" for="filterCategory">大維度 (Category)</label>
+          <p-dropdown
+            id="filterCategory"
+            [options]="categoryOptions"
+            [(ngModel)]="filterCategory"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="全部分類"
+            [showClear]="true"
+            [appendTo]="'body'"
+            (onChange)="onFilterCategoryChange()"
+            styleClass="enterprise-input"
+          ></p-dropdown>
+        </div>
+
+        <!-- 子分類 (SubCategory) -->
+        <div class="form-group">
+          <label class="form-label" for="filterSubCategory">子模組 (SubCategory)</label>
+          <p-dropdown
+            id="filterSubCategory"
+            [options]="subCategoryOptions"
+            [(ngModel)]="filterSubCategory"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="請先選擇大維度"
+            [showClear]="true"
+            [appendTo]="'body'"
+            [disabled]="!filterCategory || subCategoryOptions.length === 0"
+            styleClass="enterprise-input"
+          ></p-dropdown>
+        </div>
+
+        <!-- 設定代碼 (Code) -->
+        <div class="form-group">
+          <label class="form-label" for="filterCode">設定代碼 (Code)</label>
+          <span class="p-input-icon-left w-full">
+            <input
+              id="filterCode"
+              type="text"
+              pInputText
+              [(ngModel)]="filterCode"
+              placeholder="精準比對代碼"
+              (keyup.enter)="onSearch()"
+              class="enterprise-input w-full"
+            />
+          </span>
+        </div>
+
+        <!-- 名稱關鍵字 (Name) -->
+        <div class="form-group">
+          <label class="form-label" for="filterName">顯示名稱 (Name)</label>
+          <span class="p-input-icon-left w-full">
+            <input
+              id="filterName"
+              type="text"
+              pInputText
+              [(ngModel)]="filterName"
+              placeholder="模糊比對名稱關鍵字"
+              (keyup.enter)="onSearch()"
+              class="enterprise-input w-full"
+            />
+          </span>
+        </div>
+
+        <!-- 有效狀態 (ActiveFlag) -->
+        <div class="form-group">
+          <label class="form-label" for="filterActive">有效性狀態</label>
+          <p-dropdown
+            id="filterActive"
+            [options]="activeFlagOptions"
+            [(ngModel)]="filterActiveFlag"
+            optionLabel="label"
+            optionValue="value"
+            [appendTo]="'body'"
+            styleClass="enterprise-input"
+          ></p-dropdown>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 資料展示表格卡片 -->
+  <div class="enterprise-card table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <i class="pi pi-database"></i>
+        <span class="toolbar-title">設定項目清單</span>
+        <span class="record-counter">共 {{ totalRecords }} 筆資料</span>
+      </div>
+      <div class="toolbar-right">
+        <span class="tenant-tag-indicator">
+          <i class="pi pi-filter"></i> 範圍：<strong>{{ currentTenant }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="settings"
+      [lazy]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      [paginator]="true"
+      [rows]="pageSize"
+      [totalRecords]="totalRecords"
+      [loading]="loading"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="第 {first} - {last} 筆，共 {totalRecords} 筆"
+      responsiveLayout="scroll"
+      styleClass="p-datatable-sm enterprise-datatable"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 50px; min-width: 50px; text-align: center">#</th>
+          <th style="width: 100px; min-width: 90px">租戶識別</th>
+          <th style="width: 130px; min-width: 120px">大維度 (Category)</th>
+          <th style="width: 130px; min-width: 120px">子分類 (SubCategory)</th>
+          <th style="width: 160px; min-width: 140px">設定代碼 (Code)</th>
+          <th style="min-width: 170px">顯示名稱與說明</th>
+          <th style="min-width: 140px">配置數值 (Value)</th>
+          <th style="width: 70px; min-width: 70px; text-align: center">順序號</th>
+          <th style="width: 85px; min-width: 80px; text-align: center">狀態</th>
+          <th style="width: 100px; min-width: 95px; text-align: center">維護操作</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td style="text-align: center; color: #94a3b8">{{ item.id }}</td>
+          <td>
+            <span class="tenant-chip">{{ item.tenant }}</span>
+          </td>
+          <td>
+            <span class="category-chip">{{ item.category }}</span>
+          </td>
+          <td>
+            <span class="sub-category-text">{{ item.subCategory || '-' }}</span>
+          </td>
+          <td>
+            <span class="code-font">{{ item.code }}</span>
+          </td>
+          <td>
+            <div class="name-cell">
+              <span class="primary-name">{{ item.name }}</span>
+              <span *ngIf="item.description" class="sub-desc">{{ item.description }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="value-chip" [pTooltip]="item.value" tooltipPosition="top">
+              {{ item.value }}
+            </span>
+          </td>
+          <td style="text-align: center">
+            <span class="priority-badge">{{ item.priorityNo }}</span>
+          </td>
+          <td style="text-align: center">
+            <span
+              class="status-pill"
+              [class.status-active]="item.activeFlag === 'Y'"
+              [class.status-inactive]="item.activeFlag === 'N'"
+            >
+              <i class="dot"></i>
+              {{ item.activeFlag === 'Y' ? '有效' : '已停用' }}
+            </span>
+          </td>
+          <td style="text-align: center">
+            <div class="row-actions">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-secondary action-btn"
+                pTooltip="編輯設定"
+                (click)="openEditDialog(item)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger action-btn"
+                pTooltip="停用項目"
+                [disabled]="item.activeFlag === 'N'"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="empty-row">
+            <div class="empty-state">
+              <i class="pi pi-inbox empty-icon"></i>
+              <div class="empty-text">查無符合條件之功能設定資料</div>
+              <div class="empty-hint">請嘗試清除篩選條件，或點擊「新增設定項目」手動建立</div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- 新增 / 編輯對話框 -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="isEditMode ? '編輯功能設定項目' : '新增功能設定項目'"
+  [modal]="true"
+  [breakpoints]="{ '960px': '85vw', '640px': '95vw' }"
+  [style]="{ width: '580px', maxWidth: '95vw' }"
+  styleClass="enterprise-dialog"
+>
+  <div class="dialog-content">
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="required-label">所屬租戶 (Tenant)</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formTenant"
+          placeholder="CW"
+          [disabled]="true"
+          class="enterprise-input w-full"
+        />
+        <small class="field-hint">當前租戶已固定為 CW</small>
+      </div>
+
+      <div class="form-field">
+        <label class="required-label">排序序號 (Priority No)</label>
+        <p-inputNumber
+          [(ngModel)]="formPriorityNo"
+          [min]="1"
+          [showButtons]="true"
+          styleClass="enterprise-input w-full"
+        ></p-inputNumber>
+      </div>
+
+      <div class="form-field">
+        <label class="required-label">大分類 (Category)</label>
+        <p-dropdown
+          [options]="categoryOptions"
+          [(ngModel)]="formCategory"
+          optionLabel="label"
+          optionValue="value"
+          [editable]="true"
+          placeholder="請選擇或輸入大分類"
+          [appendTo]="'body'"
+          (onChange)="onDialogCategoryChange()"
+          styleClass="enterprise-input w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>子模組 / 類型 (SubCategory)</label>
+        <!-- 新增模式：使用 inputText，支援自由手動新增自訂子模組 -->
+        <input
+          *ngIf="!isEditMode"
+          type="text"
+          pInputText
+          [(ngModel)]="formSubCategory"
+          placeholder="例如: SESSION, DASHBOARD, EMAIL"
+          class="enterprise-input w-full"
+        />
+        <!-- 編輯/更新模式：維持原有的 dropdown 下拉選單 -->
+        <p-dropdown
+          *ngIf="isEditMode"
+          [options]="dialogSubCategoryOptions"
+          [(ngModel)]="formSubCategory"
+          optionLabel="label"
+          optionValue="value"
+          [editable]="true"
+          placeholder="請選擇或輸入子模組"
+          [appendTo]="'body'"
+          styleClass="enterprise-input w-full"
+        ></p-dropdown>
+        <small class="field-hint" *ngIf="!isEditMode">選填，可直接手動輸入自訂模組或分類代碼</small>
+        <small class="field-hint" *ngIf="isEditMode">可選取既有子模組或輸入修改</small>
+      </div>
+
+      <div class="form-field full-width">
+        <label class="required-label">設定唯一代碼 (Code)</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formCode"
+          placeholder="例如: DASHBOARD_ANALYTICS"
+          [disabled]="isEditMode"
+          class="enterprise-input w-full"
+        />
+        <small class="field-hint">租戶與大維度下之唯一業務鍵，建立後不可修改</small>
+      </div>
+
+      <div class="form-field full-width">
+        <label class="required-label">顯示名稱 (Name)</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formName"
+          placeholder="例如: 儀表板數據分析功能"
+          class="enterprise-input w-full"
+        />
+      </div>
+
+      <div class="form-field full-width">
+        <label class="required-label">配置數值 / 路由 (Value)</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formValue"
+          placeholder="例如: /analytics 或 true"
+          class="enterprise-input w-full"
+        />
+      </div>
+
+      <div class="form-field full-width">
+        <label>詳細說明 (Description)</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formDescription"
+          placeholder="業務功能配置備註說明"
+          class="enterprise-input w-full"
+        />
+      </div>
+
+      <div class="form-field full-width" *ngIf="isEditMode">
+        <label class="required-label">有效性狀態 (ActiveFlag)</label>
+        <p-dropdown
+          [options]="[
+            { label: '有效 (Y)', value: 'Y' },
+            { label: '停用 (N)', value: 'N' }
+          ]"
+          [(ngModel)]="formActiveFlag"
+          optionLabel="label"
+          optionValue="value"
+          [appendTo]="'body'"
+          styleClass="enterprise-input w-full"
+        ></p-dropdown>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="取消"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary p-button-sm"
+      (click)="dialogVisible = false"
+    ></button>
+    <button
+      pButton
+      label="確認儲存"
+      icon="pi pi-check"
+      class="p-button-primary p-button-sm"
+      (click)="saveSetting()"
+    ></button>
+  </ng-template>
+</p-dialog>

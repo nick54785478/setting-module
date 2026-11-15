@@ -1,0 +1,55 @@
+<aside
+  class="enterprise-sidebar"
+  [class.collapsed]="collapsed"
+  [class.mobile-open]="mobileOpen"
+>
+  <!-- 品牌標識區 -->
+  <div class="sidebar-brand">
+    <div class="brand-identity">
+      <div class="brand-logo">
+        <i class="pi pi-cog"></i>
+      </div>
+      <div class="brand-text" *ngIf="!collapsed">
+        <span class="brand-title">Enterprise Admin</span>
+        <span class="brand-sub">通用模組控制台</span>
+      </div>
+    </div>
+    <!-- 手機版關閉按鈕 -->
+    <button
+      class="mobile-close-btn"
+      (click)="closeMobile.emit()"
+      aria-label="關閉選單"
+    >
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <!-- 導航功能選單 -->
+  <div class="sidebar-menu">
+    <div class="menu-group" *ngFor="let group of menuGroups">
+      <div class="group-title" *ngIf="!collapsed">{{ group.group }}</div>
+      <ul class="nav-list">
+        <li
+          *ngFor="let item of group.items"
+          class="nav-item"
+          [class.active]="item.active"
+          (click)="onMenuClick(item)"
+          [pTooltip]="collapsed ? item.label : ''"
+          tooltipPosition="right"
+        >
+          <i [class]="item.icon + ' nav-icon'"></i>
+          <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+          <span class="nav-badge" *ngIf="!collapsed && item.badge">{{ item.badge }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 底部縮合切換按鈕 -->
+  <div class="sidebar-footer">
+    <button class="collapse-btn" (click)="toggleCollapse.emit()">
+      <i [class]="collapsed ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'"></i>
+      <span *ngIf="!collapsed">收合側邊欄</span>
+    </button>
+  </div>
+</aside>
