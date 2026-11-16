@@ -1,6 +1,6 @@
 package com.module.setting.infrastructure.specification;
 
-import com.module.setting.application.shared.context.TenantContextHolder;
+import com.module.setting.application.shared.context.UserContextHolder;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
 import com.module.setting.application.shared.vo.YesNo;
 import com.module.setting.infrastructure.persistence.setting.entity.Setting;
@@ -17,7 +17,7 @@ import java.util.List;
  * 設定分頁動態查詢 Specification (GetSettingsSpecification)
  * <p>
  * 基礎設施層持久化規範物件，封裝 JPA Criteria 條件組裝邏輯，支援租戶、維度、子分類、名稱與啟用狀態動態過濾。
- * 租戶標識支援由查詢參數傳入或自動從應用層 {@link TenantContextHolder} 取用。
+ * 租戶標識支援由查詢參數傳入或自動從應用層 {@link UserContextHolder} 取用。
  * </p>
  */
 @Data
@@ -35,7 +35,7 @@ public class GetSettingsSpecification {
     /**
      * 從應用層 Query 物件建立 Specification
      * <p>
-     * 若 Query 物件中未指定 tenant，將自動從 TenantContextHolder 中取得當前執行緒之租戶標識。
+     * 若 Query 物件中未指定 tenant，將自動從 UserContextHolder 中取得當前執行緒之租戶標識。
      * </p>
      *
      * @param query 分頁查詢參數物件
@@ -44,7 +44,7 @@ public class GetSettingsSpecification {
     public static GetSettingsSpecification fromQuery(GetSettingPagedQuery query) {
         String resolvedTenant = (query.tenant() != null && !query.tenant().isBlank())
                 ? query.tenant()
-                : TenantContextHolder.getTenant();
+                : UserContextHolder.getTenant();
 
         return new GetSettingsSpecification(
                 resolvedTenant,
@@ -67,7 +67,7 @@ public class GetSettingsSpecification {
 
             String targetTenant = (tenant != null && !tenant.isBlank())
                     ? tenant.trim()
-                    : TenantContextHolder.getTenant();
+                    : UserContextHolder.getTenant();
 
             if (targetTenant != null && !targetTenant.isBlank()) {
                 predicates.add(cb.equal(root.get("scope").get("tenant"), targetTenant));

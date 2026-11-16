@@ -46,10 +46,10 @@
     </button>
 
     <!-- 使用者資訊區塊 -->
-    <div class="user-profile">
-      <div class="avatar-badge">AD</div>
+    <div class="user-profile" [pTooltip]="'當前登入者: ' + currentUsername" tooltipPosition="bottom">
+      <div class="avatar-badge">NZ</div>
       <div class="user-meta">
-        <span class="user-name">Admin User</span>
+        <span class="user-name">{{ currentUsername }}</span>
         <span class="user-role">系統管理員</span>
       </div>
     </div>

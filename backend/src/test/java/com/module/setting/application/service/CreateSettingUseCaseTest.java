@@ -1,8 +1,8 @@
 package com.module.setting.application.service;
 
-import com.module.setting.application.shared.command.CreateSettingCommand;
-import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.port.out.SettingRepositoryPort;
+import com.module.setting.application.shared.command.CreateSettingCommand;
+import com.module.setting.application.shared.result.SettingCreatedResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class CreateSettingUseCaseTest {
     private SettingApplicationService settingApplicationService;
 
     private CreateSettingCommand sampleCommand;
-    private SettingGottenResult sampleResult;
+    private SettingCreatedResult sampleResult;
 
     @BeforeEach
     void setUp() {
@@ -42,7 +42,7 @@ class CreateSettingUseCaseTest {
                 "Dashboard",
                 1);
 
-        sampleResult = new SettingGottenResult(
+        sampleResult = new SettingCreatedResult(
                 1L,
                 "default",
                 "FUNCTION",
@@ -69,7 +69,7 @@ class CreateSettingUseCaseTest {
         when(settingRepositoryPort.save(any(CreateSettingCommand.class))).thenReturn(sampleResult);
 
         // When
-        SettingGottenResult result = settingApplicationService.create(sampleCommand);
+        SettingCreatedResult result = settingApplicationService.create(sampleCommand);
 
         // Then
         assertNotNull(result);

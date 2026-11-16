@@ -1,7 +1,7 @@
 package com.module.setting.application.port.in;
 
 import com.module.setting.application.shared.command.UpdateSettingCommand;
-import com.module.setting.application.shared.result.SettingGottenResult;
+import com.module.setting.application.shared.result.SettingUpdatedResult;
 
 /**
  * 更新設定用例介面 (UpdateSettingUseCase)
@@ -17,5 +17,5 @@ public interface UpdateSettingUseCase {
      * @param command 更新設定指令
      * @return 更新完成後的設定結果 DTO
      */
-    SettingGottenResult update(UpdateSettingCommand command);
+    SettingUpdatedResult update(UpdateSettingCommand command);
 }

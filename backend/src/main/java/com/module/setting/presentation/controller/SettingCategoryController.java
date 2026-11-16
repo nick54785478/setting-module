@@ -6,10 +6,15 @@ import com.module.setting.application.port.in.GetCategoryUseCase;
 import com.module.setting.application.port.in.UpdateCategoryUseCase;
 import com.module.setting.application.shared.command.CreateCategoryCommand;
 import com.module.setting.application.shared.command.UpdateCategoryCommand;
+import com.module.setting.application.shared.result.CategoryCreatedResult;
 import com.module.setting.application.shared.result.CategoryGottenResult;
+import com.module.setting.application.shared.result.CategoryUpdatedResult;
+import com.module.setting.presentation.assembler.CategoryResourceAssembler;
 import com.module.setting.presentation.resource.in.CreateCategoryResource;
 import com.module.setting.presentation.resource.in.UpdateCategoryResource;
+import com.module.setting.presentation.resource.out.CategoryCreatedResource;
 import com.module.setting.presentation.resource.out.CategoryGottenResource;
+import com.module.setting.presentation.resource.out.CategoryUpdatedResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,6 +43,7 @@ public class SettingCategoryController {
     private final CreateCategoryUseCase createCategoryUseCase;
     private final UpdateCategoryUseCase updateCategoryUseCase;
     private final DeleteCategoryUseCase deleteCategoryUseCase;
+    private final CategoryResourceAssembler categoryResourceAssembler;
 
     /**
      * 取得維度元資料清單 (供下拉選單或字典清單展示)
@@ -56,7 +62,7 @@ public class SettingCategoryController {
                 : getCategoryUseCase.getAll(tenant);
 
         List<CategoryGottenResource> response = results.stream()
-                .map(this::toResource)
+                .map(categoryResourceAssembler::toGottenResource)
                 .toList();
 
         return ResponseEntity.ok(response);
@@ -71,7 +77,7 @@ public class SettingCategoryController {
     @GetMapping("/{id}")
     public ResponseEntity<CategoryGottenResource> getById(@PathVariable Long id) {
         CategoryGottenResult result = getCategoryUseCase.getById(id);
-        return ResponseEntity.ok(toResource(result));
+        return ResponseEntity.ok(categoryResourceAssembler.toGottenResource(result));
     }
 
     /**
@@ -81,7 +87,7 @@ public class SettingCategoryController {
     @ApiResponse(responseCode = "201", description = "建立成功")
     @ApiResponse(responseCode = "400", description = "參數驗證失敗或代碼已存在")
     @PostMapping
-    public ResponseEntity<CategoryGottenResource> create(@Valid @RequestBody CreateCategoryResource resource) {
+    public ResponseEntity<CategoryCreatedResource> create(@Valid @RequestBody CreateCategoryResource resource) {
         CreateCategoryCommand command = new CreateCategoryCommand(
                 resource.tenant(),
                 resource.code(),
@@ -89,8 +95,8 @@ public class SettingCategoryController {
                 resource.description(),
                 resource.priorityNo()
         );
-        CategoryGottenResult result = createCategoryUseCase.create(command);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResource(result));
+        CategoryCreatedResult result = createCategoryUseCase.create(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryResourceAssembler.toCreatedResource(result));
     }
 
     /**
@@ -100,7 +106,7 @@ public class SettingCategoryController {
     @ApiResponse(responseCode = "200", description = "更新成功")
     @ApiResponse(responseCode = "404", description = "查無指定 ID 之維度")
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryGottenResource> update(
+    public ResponseEntity<CategoryUpdatedResource> update(
             @PathVariable Long id,
             @Valid @RequestBody UpdateCategoryResource resource) {
 
@@ -111,8 +117,8 @@ public class SettingCategoryController {
                 resource.priorityNo(),
                 resource.activeFlag()
         );
-        CategoryGottenResult result = updateCategoryUseCase.update(command);
-        return ResponseEntity.ok(toResource(result));
+        CategoryUpdatedResult result = updateCategoryUseCase.update(command);
+        return ResponseEntity.ok(categoryResourceAssembler.toUpdatedResource(result));
     }
 
     /**
@@ -124,21 +130,5 @@ public class SettingCategoryController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteCategoryUseCase.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private CategoryGottenResource toResource(CategoryGottenResult result) {
-        return new CategoryGottenResource(
-                result.id(),
-                result.tenant(),
-                result.code(),
-                result.name(),
-                result.description(),
-                result.priorityNo(),
-                result.activeFlag(),
-                result.label(),
-                result.value(),
-                result.createdAt(),
-                result.updatedAt()
-        );
     }
 }

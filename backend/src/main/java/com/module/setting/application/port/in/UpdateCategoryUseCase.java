@@ -1,7 +1,7 @@
 package com.module.setting.application.port.in;
 
 import com.module.setting.application.shared.command.UpdateCategoryCommand;
-import com.module.setting.application.shared.result.CategoryGottenResult;
+import com.module.setting.application.shared.result.CategoryUpdatedResult;
 
 /**
  * 更新維度元資料用例 (UpdateCategoryUseCase)
@@ -14,5 +14,5 @@ public interface UpdateCategoryUseCase {
      * @param command 更新維度指令
      * @return 更新成功之維度結果
      */
-    CategoryGottenResult update(UpdateCategoryCommand command);
+    CategoryUpdatedResult update(UpdateCategoryCommand command);
 }

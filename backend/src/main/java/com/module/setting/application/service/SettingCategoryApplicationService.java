@@ -6,8 +6,10 @@ import com.module.setting.application.port.in.GetCategoryUseCase;
 import com.module.setting.application.port.in.UpdateCategoryUseCase;
 import com.module.setting.application.shared.command.CreateCategoryCommand;
 import com.module.setting.application.shared.command.UpdateCategoryCommand;
-import com.module.setting.application.shared.context.TenantContextHolder;
+import com.module.setting.application.shared.context.UserContextHolder;
+import com.module.setting.application.shared.result.CategoryCreatedResult;
 import com.module.setting.application.shared.result.CategoryGottenResult;
+import com.module.setting.application.shared.result.CategoryUpdatedResult;
 import com.module.setting.application.shared.vo.YesNo;
 import com.module.setting.infrastructure.persistence.category.entity.SettingCategory;
 import com.module.setting.infrastructure.persistence.category.repository.SettingCategoryJpaRepository;
@@ -58,7 +60,7 @@ public class SettingCategoryApplicationService implements
     }
 
     @Override
-    public CategoryGottenResult create(CreateCategoryCommand command) {
+    public CategoryCreatedResult create(CreateCategoryCommand command) {
         if (command == null || command.code() == null || command.code().isBlank() ||
                 command.name() == null || command.name().isBlank()) {
             throw new IllegalArgumentException("Category code and name cannot be blank.");
@@ -78,11 +80,11 @@ public class SettingCategoryApplicationService implements
         );
 
         SettingCategory saved = categoryJpaRepository.save(category);
-        return toResult(saved);
+        return toCreatedResult(saved);
     }
 
     @Override
-    public CategoryGottenResult update(UpdateCategoryCommand command) {
+    public CategoryUpdatedResult update(UpdateCategoryCommand command) {
         if (command == null || command.id() == null) {
             throw new IllegalArgumentException("Category ID cannot be null.");
         }
@@ -98,7 +100,7 @@ public class SettingCategoryApplicationService implements
         );
 
         SettingCategory updated = categoryJpaRepository.save(category);
-        return toResult(updated);
+        return toUpdatedResult(updated);
     }
 
     @Override
@@ -113,12 +115,40 @@ public class SettingCategoryApplicationService implements
         if (tenant != null && !tenant.isBlank()) {
             return tenant.trim();
         }
-        String contextTenant = TenantContextHolder.getTenant();
+        String contextTenant = UserContextHolder.getTenant();
         return (contextTenant != null && !contextTenant.isBlank()) ? contextTenant : "ALL";
     }
 
     private CategoryGottenResult toResult(SettingCategory entity) {
         return CategoryGottenResult.of(
+                entity.getId(),
+                entity.getTenant(),
+                entity.getCode(),
+                entity.getName(),
+                entity.getDescription(),
+                entity.getPriorityNo(),
+                entity.getActiveFlag(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
+    }
+
+    private CategoryCreatedResult toCreatedResult(SettingCategory entity) {
+        return CategoryCreatedResult.of(
+                entity.getId(),
+                entity.getTenant(),
+                entity.getCode(),
+                entity.getName(),
+                entity.getDescription(),
+                entity.getPriorityNo(),
+                entity.getActiveFlag(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
+    }
+
+    private CategoryUpdatedResult toUpdatedResult(SettingCategory entity) {
+        return CategoryUpdatedResult.of(
                 entity.getId(),
                 entity.getTenant(),
                 entity.getCode(),

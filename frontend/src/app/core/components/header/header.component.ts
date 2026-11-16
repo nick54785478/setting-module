@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { DropdownModule } from 'primeng/dropdown';
 import { TooltipModule } from 'primeng/tooltip';
 import { TenantService } from '../../services/tenant.service';
+import { UserService } from '../../services/user.service';
 import { NavigationService, ActiveView } from '../../services/navigation.service';
 import { TenantOption } from '../../models/tenant.model';
 
@@ -20,6 +21,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   currentTenant: string = 'CW';
+  currentUsername: string = 'nickgh.zhang@cw.com';
   tenantOptions: TenantOption[] = [];
   currentViewLabel: string = '功能設定管理';
 
@@ -27,11 +29,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   constructor(
     private tenantService: TenantService,
+    private userService: UserService,
     private navigationService: NavigationService
   ) {}
 
   ngOnInit(): void {
     this.currentTenant = this.tenantService.getCurrentTenant();
+    this.currentUsername = this.userService.getCurrentUsername();
     this.tenantOptions = this.tenantService.defaultTenantOptions;
 
     this.navSub = this.navigationService.currentView$.subscribe((view: ActiveView) => {

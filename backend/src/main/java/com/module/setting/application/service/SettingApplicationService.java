@@ -7,8 +7,10 @@ import com.module.setting.application.shared.command.DeleteSettingCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
 import com.module.setting.application.shared.result.PagedDataGottenResult;
+import com.module.setting.application.shared.result.SettingCreatedResult;
 import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingOptionGottenResult;
+import com.module.setting.application.shared.result.SettingUpdatedResult;
 import com.module.setting.application.shared.template.SettingSeedTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,12 +41,12 @@ public class SettingApplicationService implements
     }
 
     @Override
-    public SettingGottenResult create(CreateSettingCommand command) {
+    public SettingCreatedResult create(CreateSettingCommand command) {
         return settingRepositoryPort.save(command);
     }
 
     @Override
-    public SettingGottenResult update(UpdateSettingCommand command) {
+    public SettingUpdatedResult update(UpdateSettingCommand command) {
         return settingRepositoryPort.update(command);
     }
 

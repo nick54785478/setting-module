@@ -3,11 +3,13 @@ package com.module.setting.infrastructure.adapter;
 import com.module.setting.application.port.out.SettingRepositoryPort;
 import com.module.setting.application.shared.command.CreateSettingCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
-import com.module.setting.application.shared.context.TenantContextHolder;
+import com.module.setting.application.shared.context.UserContextHolder;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
 import com.module.setting.application.shared.result.PagedDataGottenResult;
+import com.module.setting.application.shared.result.SettingCreatedResult;
 import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingOptionGottenResult;
+import com.module.setting.application.shared.result.SettingUpdatedResult;
 import com.module.setting.application.shared.vo.YesNo;
 import com.module.setting.infrastructure.assembler.SettingDtoAssembler;
 import com.module.setting.infrastructure.persistence.category.entity.SettingCategory;
@@ -35,7 +37,7 @@ import java.util.Optional;
  * <p>
  * 實作應用層 Outbound Port (SettingRepositoryPort)，作為基礎設施層對外匯聚出口，
  * 協調 JPA Repository、Specification 與 DTO Assembler 完成資料持久化與物件轉換。
- * 自動於各業務查詢與持久化操作中取用 {@link TenantContextHolder} 的租戶識別碼。
+ * 自動於各業務查詢與持久化操作中取用 {@link UserContextHolder} 的租戶識別碼。
  * </p>
  */
 @Component
@@ -55,7 +57,7 @@ public class SettingRepositoryAdapter implements SettingRepositoryPort {
     }
 
     @Override
-    public SettingGottenResult save(CreateSettingCommand command) {
+    public SettingCreatedResult save(CreateSettingCommand command) {
         String tenant = resolveTenant(command.tenant());
         if (tenant == null || tenant.isBlank()) {
             throw new IllegalArgumentException("Tenant is required either via RequestHeader (e.g. X-Tenant-Id) or request body.");
@@ -76,11 +78,11 @@ public class SettingRepositoryAdapter implements SettingRepositoryPort {
         );
 
         Setting saved = settingJpaRepository.save(setting);
-        return settingDtoAssembler.toResult(saved);
+        return settingDtoAssembler.toCreatedResult(saved);
     }
 
     @Override
-    public SettingGottenResult update(UpdateSettingCommand command) {
+    public SettingUpdatedResult update(UpdateSettingCommand command) {
         Setting setting = settingJpaRepository.findById(command.id())
                 .orElseThrow(() -> new IllegalArgumentException("Setting not found with id: " + command.id()));
 
@@ -104,7 +106,7 @@ public class SettingRepositoryAdapter implements SettingRepositoryPort {
         );
 
         Setting updated = settingJpaRepository.save(setting);
-        return settingDtoAssembler.toResult(updated);
+        return settingDtoAssembler.toUpdatedResult(updated);
     }
 
     @Override
@@ -207,7 +209,7 @@ public class SettingRepositoryAdapter implements SettingRepositoryPort {
     }
 
     /**
-     * 解析租戶代碼：優先採用顯式傳入的 tenant，若無則從 TenantContextHolder 讀取
+     * 解析租戶代碼：優先採用顯式傳入的 tenant，若無則從 UserContextHolder 讀取
      *
      * @param tenant 顯式傳入的租戶代碼
      * @return 解析後的租戶代碼，可能為 null
@@ -216,6 +218,6 @@ public class SettingRepositoryAdapter implements SettingRepositoryPort {
         if (tenant != null && !tenant.isBlank()) {
             return tenant.trim();
         }
-        return TenantContextHolder.getTenant();
+        return UserContextHolder.getTenant();
     }
 }

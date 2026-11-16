@@ -4,8 +4,10 @@ import com.module.setting.application.shared.command.CreateSettingCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
 import com.module.setting.application.shared.result.PagedDataGottenResult;
+import com.module.setting.application.shared.result.SettingCreatedResult;
 import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingOptionGottenResult;
+import com.module.setting.application.shared.result.SettingUpdatedResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +16,7 @@ import java.util.Optional;
  * 設定倉儲輸出埠介面 (SettingRepositoryPort)
  * <p>
  * 應用層 Outbound Port，嚴禁使用任何技術類或 ORM 實體物件作為參數或回傳值，
- * 僅接收 Command、Query 並回傳 DTO (SettingGottenResult, PagedDataGottenResult, SettingOptionGottenResult)。
+ * 僅接收 Command、Query 並回傳 DTO (SettingCreatedResult, SettingUpdatedResult, SettingGottenResult, PagedDataGottenResult, SettingOptionGottenResult)。
  * </p>
  */
 public interface SettingRepositoryPort {
@@ -25,7 +27,7 @@ public interface SettingRepositoryPort {
      * @param command 建立設定指令
      * @return 新增後的設定結果 DTO
      */
-    SettingGottenResult save(CreateSettingCommand command);
+    SettingCreatedResult save(CreateSettingCommand command);
 
     /**
      * 更新設定持久化
@@ -33,7 +35,7 @@ public interface SettingRepositoryPort {
      * @param command 更新設定指令
      * @return 更新後的設定結果 DTO
      */
-    SettingGottenResult update(UpdateSettingCommand command);
+    SettingUpdatedResult update(UpdateSettingCommand command);
 
     /**
      * 檢查指定租戶、大分類與代碼之設定是否存在

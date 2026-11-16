@@ -43,6 +43,50 @@
         <span class="record-counter">共 {{ categories.length }} 筆維度</span>
       </div>
       <div class="toolbar-right">
+        <!-- 欄位自訂顯示按鈕 -->
+        <button
+          pButton
+          type="button"
+          label="欄位"
+          icon="pi pi-filter"
+          class="p-button-outlined p-button-sm column-config-btn"
+          (click)="openColumnCustomisation($event, columnOp)"
+        ></button>
+
+        <p-overlayPanel #columnOp [showCloseIcon]="true" styleClass="column-overlay-panel">
+          <div class="column-customisation-box">
+            <div class="popover-header">
+              <span class="popover-title">欄位設定</span>
+            </div>
+            <div class="popover-content">
+              <div *ngFor="let col of draftColumns" class="column-option-row">
+                <p-checkbox
+                  [(ngModel)]="col.visible"
+                  [binary]="true"
+                  [inputId]="'cat_col_' + col.field"
+                ></p-checkbox>
+                <label [for]="'cat_col_' + col.field" class="option-label">{{ col.label }}</label>
+              </div>
+            </div>
+            <div class="popover-footer">
+              <button
+                pButton
+                type="button"
+                label="提交"
+                class="p-button-sm p-button-primary footer-btn"
+                (click)="saveColumnCustomisation(columnOp)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                label="取消"
+                class="p-button-sm p-button-outlined p-button-secondary footer-btn"
+                (click)="cancelColumnCustomisation(columnOp)"
+              ></button>
+            </div>
+          </div>
+        </p-overlayPanel>
+
         <span class="tenant-tag-indicator">
           <i class="pi pi-filter"></i> 範圍：<strong>{{ currentTenant }}</strong>
         </span>
@@ -57,32 +101,32 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 60px; text-align: center">順序</th>
-          <th style="width: 100px">租戶識別</th>
-          <th style="width: 180px">維度代碼 (Code)</th>
-          <th style="min-width: 160px">維度名稱 (Name)</th>
-          <th style="min-width: 220px">維度說明 (Description)</th>
-          <th style="width: 100px; text-align: center">有效狀態</th>
+          <th *ngIf="isColumnVisible('priorityNo')" style="width: 60px; text-align: center">順序</th>
+          <th *ngIf="isColumnVisible('tenant')" style="width: 100px">租戶識別</th>
+          <th *ngIf="isColumnVisible('code')" style="width: 180px">維度代碼 (Code)</th>
+          <th *ngIf="isColumnVisible('name')" style="min-width: 160px">維度名稱 (Name)</th>
+          <th *ngIf="isColumnVisible('description')" style="min-width: 220px">維度說明 (Description)</th>
+          <th *ngIf="isColumnVisible('activeFlag')" style="width: 100px; text-align: center">有效狀態</th>
           <th style="width: 120px; text-align: center">維護操作</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-item>
         <tr>
-          <td style="text-align: center; font-weight: 600; color: #64748b">{{ item.priorityNo }}</td>
-          <td>
+          <td *ngIf="isColumnVisible('priorityNo')" style="text-align: center; font-weight: 600; color: #64748b">{{ item.priorityNo }}</td>
+          <td *ngIf="isColumnVisible('tenant')">
             <span class="tenant-chip">{{ item.tenant }}</span>
           </td>
-          <td>
+          <td *ngIf="isColumnVisible('code')">
             <span class="code-font">{{ item.code }}</span>
           </td>
-          <td>
+          <td *ngIf="isColumnVisible('name')">
             <span class="primary-name">{{ item.name }}</span>
           </td>
-          <td style="color: #64748b; font-size: 0.82rem">
+          <td *ngIf="isColumnVisible('description')" style="color: #64748b; font-size: 0.82rem">
             {{ item.description || '-' }}
           </td>
-          <td style="text-align: center">
+          <td *ngIf="isColumnVisible('activeFlag')" style="text-align: center">
             <span
               class="status-indicator"
               [ngClass]="item.activeFlag === 'Y' ? 'status-active' : 'status-inactive'"
@@ -160,6 +204,7 @@
           [(ngModel)]="formPriorityNo"
           [min]="1"
           [showButtons]="true"
+          placeholder="例如: 1"
           styleClass="enterprise-input w-full"
         ></p-inputNumber>
       </div>

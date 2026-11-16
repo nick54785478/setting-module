@@ -39,6 +39,12 @@ html, body {
   background: #ffffff !important;
   .p-dropdown-label {
     padding: 0.45rem 0.75rem !important;
+    &.p-placeholder {
+      color: #94a3b8 !important;
+    }
+  }
+  input.p-dropdown-label::placeholder {
+    color: #94a3b8 !important;
   }
 }
 

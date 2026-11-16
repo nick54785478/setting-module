@@ -2,11 +2,13 @@ package com.module.setting.presentation.assembler;
 
 import com.module.setting.application.shared.command.CreateSettingCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
-import com.module.setting.application.shared.context.TenantContextHolder;
+import com.module.setting.application.shared.context.UserContextHolder;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
 import com.module.setting.application.shared.result.PagedDataGottenResult;
+import com.module.setting.application.shared.result.SettingCreatedResult;
 import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingOptionGottenResult;
+import com.module.setting.application.shared.result.SettingUpdatedResult;
 import com.module.setting.presentation.resource.in.CreateSettingResource;
 import com.module.setting.presentation.resource.in.UpdateSettingResource;
 import com.module.setting.presentation.resource.out.*;
@@ -28,7 +30,7 @@ public class SettingResourceAssembler {
     /**
      * 將建立設定請求資源轉換為建立設定指令
      * <p>
-     * 若請求體中未傳入 tenant，則自動從 {@link TenantContextHolder} 取得當前請求之租戶標識。
+     * 若請求體中未傳入 tenant，則自動從 {@link UserContextHolder} 取得當前請求之租戶標識。
      * </p>
      *
      * @param resource 建立設定請求資源
@@ -37,7 +39,7 @@ public class SettingResourceAssembler {
     public CreateSettingCommand toCommand(CreateSettingResource resource) {
         String tenant = (resource.tenant() != null && !resource.tenant().isBlank())
                 ? resource.tenant()
-                : TenantContextHolder.getTenant();
+                : UserContextHolder.getTenant();
 
         return new CreateSettingCommand(
                 tenant,
@@ -74,7 +76,7 @@ public class SettingResourceAssembler {
     /**
      * 建立分頁查詢指令物件
      *
-     * @param tenant      租戶代碼 (若為空將由下層或此處自動對齊 TenantContextHolder)
+     * @param tenant      租戶代碼 (若為空將由下層或此處自動對齊 UserContextHolder)
      * @param category    功能大維度
      * @param subCategory 業務子分類
      * @param code        設定代碼
@@ -89,17 +91,20 @@ public class SettingResourceAssembler {
                                             int page, int size) {
         String resolvedTenant = (tenant != null && !tenant.isBlank())
                 ? tenant
-                : TenantContextHolder.getTenant();
+                : UserContextHolder.getTenant();
         return new GetSettingPagedQuery(resolvedTenant, category, subCategory, code, name, activeFlag, page, size);
     }
 
     /**
      * 將應用層結果 DTO 轉換為建立成功回應資源
      *
-     * @param result 設定結果 DTO
+     * @param result 設定建立結果 DTO
      * @return 建立成功回應資源
      */
-    public SettingCreatedResource toCreatedResource(SettingGottenResult result) {
+    public SettingCreatedResource toCreatedResource(SettingCreatedResult result) {
+        if (result == null) {
+            return null;
+        }
         return new SettingCreatedResource(
                 result.id(),
                 result.tenant(),
@@ -117,10 +122,13 @@ public class SettingResourceAssembler {
     /**
      * 將應用層結果 DTO 轉換為更新成功回應資源
      *
-     * @param result 設定結果 DTO
+     * @param result 設定更新結果 DTO
      * @return 更新成功回應資源
      */
-    public SettingUpdatedResource toUpdatedResource(SettingGottenResult result) {
+    public SettingUpdatedResource toUpdatedResource(SettingUpdatedResult result) {
+        if (result == null) {
+            return null;
+        }
         return new SettingUpdatedResource(
                 result.id(),
                 result.tenant(),

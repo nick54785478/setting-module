@@ -8,8 +8,10 @@ import com.module.setting.application.port.in.GetSettingUseCase;
 import com.module.setting.application.port.in.UpdateSettingUseCase;
 import com.module.setting.application.shared.command.DeleteSettingCommand;
 import com.module.setting.application.shared.result.PagedDataGottenResult;
+import com.module.setting.application.shared.result.SettingCreatedResult;
 import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingOptionGottenResult;
+import com.module.setting.application.shared.result.SettingUpdatedResult;
 import com.module.setting.presentation.assembler.SettingResourceAssembler;
 import com.module.setting.presentation.resource.in.CreateSettingResource;
 import com.module.setting.presentation.resource.in.UpdateSettingResource;
@@ -86,7 +88,7 @@ public class SettingController {
     @PostMapping
     public ResponseEntity<SettingCreatedResource> create(@Valid @RequestBody CreateSettingResource resource) {
         var command = settingResourceAssembler.toCommand(resource);
-        SettingGottenResult result = createSettingUseCase.create(command);
+        SettingCreatedResult result = createSettingUseCase.create(command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(settingResourceAssembler.toCreatedResource(result));
     }
@@ -108,7 +110,7 @@ public class SettingController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateSettingResource resource) {
         var command = settingResourceAssembler.toCommand(id, resource);
-        SettingGottenResult result = updateSettingUseCase.update(command);
+        SettingUpdatedResult result = updateSettingUseCase.update(command);
         return ResponseEntity.ok(settingResourceAssembler.toUpdatedResource(result));
     }
 

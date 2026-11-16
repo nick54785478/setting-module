@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -11,9 +11,12 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { TenantService } from '../../../../core/services/tenant.service';
+import { CustomisationService } from '../../../../core/services/customisation.service';
 import { CategoryService } from '../../services/category.service';
 import { CategoryItem, CreateCategoryRequest, UpdateCategoryRequest } from '../../models/category.model';
 
@@ -38,7 +41,9 @@ import { CategoryItem, CreateCategoryRequest, UpdateCategoryRequest } from '../.
     InputNumberModule,
     ToastModule,
     ConfirmDialogModule,
-    TooltipModule
+    TooltipModule,
+    OverlayPanelModule,
+    CheckboxModule
   ],
   templateUrl: './category-management.component.html',
   styleUrl: './category-management.component.scss'
@@ -63,14 +68,45 @@ export class CategoryManagementComponent implements OnInit, OnDestroy {
   formPriorityNo: number = 1;
   formActiveFlag: 'Y' | 'N' = 'Y';
 
+  // 個人化表格欄位顯示 (FieldView)
+  readonly componentName = 'CategoryComponent';
+  readonly defaultColumns: { field: string; label: string; visible: boolean }[] = [
+    { field: 'priorityNo', label: '順序', visible: true },
+    { field: 'tenant', label: '租戶識別', visible: true },
+    { field: 'code', label: '維度代碼 (Code)', visible: true },
+    { field: 'name', label: '維度名稱 (Name)', visible: true },
+    { field: 'description', label: '維度說明 (Description)', visible: true },
+    { field: 'activeFlag', label: '有效狀態', visible: true }
+  ];
+  columns: { field: string; label: string; visible: boolean }[] = [];
+  draftColumns: { field: string; label: string; visible: boolean }[] = [];
+
   constructor(
     private categoryService: CategoryService,
     private tenantService: TenantService,
+    private customisationService: CustomisationService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    // 1. 先嘗試從本地快取瞬間初始化 (防重新整理閃爍)
+    const localFields = this.customisationService.getLocalCustomisation(this.componentName, 'FieldView');
+    if (localFields && localFields.length > 0) {
+      const localSet = new Set(localFields);
+      this.columns = this.defaultColumns.map((col) => ({
+        ...col,
+        visible: localSet.has(col.field)
+      }));
+    } else {
+      // 尚未配置 -> 預設全顯
+      this.columns = this.defaultColumns.map((col) => ({ ...col, visible: true }));
+    }
+
+    // 2. 向後端同步最新個人化配置 (若尚未配置則維持全顯，直到第一次儲存)
+    this.loadColumnCustomisation();
+
     this.tenantSub = this.tenantService.tenant$.subscribe((tenant) => {
       this.currentTenant = tenant;
       this.loadData();
@@ -219,5 +255,87 @@ export class CategoryManagementComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  /**
+   * 載入使用者欄位個人化配置 (若查無紀錄自動 Fallback 預設全顯)
+   */
+  loadColumnCustomisation(): void {
+    this.customisationService.getCustomisation(this.componentName, 'FieldView').subscribe({
+      next: (fields) => {
+        if (fields && fields.length > 0) {
+          const visibleSet = new Set(fields);
+          this.columns = this.defaultColumns.map((col) => ({
+            ...col,
+            visible: visibleSet.has(col.field)
+          }));
+        } else {
+          // 後端尚未配置 -> 若無本地快取則顯示全部欄位 (不主動存入，等到使用者第一次點擊儲存才存)
+          const local = this.customisationService.getLocalCustomisation(this.componentName, 'FieldView');
+          if (!local) {
+            this.columns = this.defaultColumns.map((col) => ({ ...col, visible: true }));
+          }
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.warn('載入維度欄位自訂設定失敗，採用目前佈局', err);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  /**
+   * 開啟欄位自訂浮動面板，建立暫存 Draft 狀態
+   */
+  openColumnCustomisation(event: Event, op: OverlayPanel): void {
+    this.draftColumns = this.columns.map((c) => ({ ...c }));
+    op.toggle(event);
+  }
+
+  /**
+   * 提交並持久化儲存欄位自訂配置 (傳遞 field 陣列，後端以逗號分隔儲存)
+   */
+  saveColumnCustomisation(op: OverlayPanel): void {
+    const visibleFields: string[] = this.draftColumns
+      .filter((c) => c.visible)
+      .map((c) => c.field);
+
+    this.customisationService.saveCustomisation(this.componentName, visibleFields, 'FieldView').subscribe({
+      next: () => {
+        this.columns = this.draftColumns.map((c) => ({ ...c }));
+        op.hide();
+        this.cdr.markForCheck();
+        this.messageService.add({
+          severity: 'success',
+          summary: '儲存成功',
+          detail: '維度表格欄位顯示偏好已儲存並生效',
+          life: 3000
+        });
+      },
+      error: (err) => {
+        console.error('儲存維度欄位配置失敗', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: '儲存失敗',
+          detail: '儲存欄位自訂設定失敗'
+        });
+      }
+    });
+  }
+
+  /**
+   * 取消並拋棄暫存 Draft 狀態
+   */
+  cancelColumnCustomisation(op: OverlayPanel): void {
+    op.hide();
+  }
+
+  /**
+   * 檢查特定欄位當前是否顯示
+   */
+  isColumnVisible(field: string): boolean {
+    const col = this.columns.find((c) => c.field === field);
+    return col ? col.visible : true;
   }
 }

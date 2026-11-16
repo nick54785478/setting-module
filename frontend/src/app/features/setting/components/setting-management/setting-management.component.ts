@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -13,9 +13,12 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { OverlayPanelModule, OverlayPanel } from 'primeng/overlaypanel';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { TenantService } from '../../../../core/services/tenant.service';
+import { CustomisationService } from '../../../../core/services/customisation.service';
 import { SettingService } from '../../services/setting.service';
 import {
   CreateSettingRequest,
@@ -47,7 +50,9 @@ import {
     ConfirmDialogModule,
     TooltipModule,
     CardModule,
-    InputNumberModule
+    InputNumberModule,
+    OverlayPanelModule,
+    CheckboxModule
   ],
   templateUrl: './setting-management.component.html',
   styleUrl: './setting-management.component.scss'
@@ -87,8 +92,8 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
 
   // 表單資料模型
   formTenant: string = '';
-  formCategory: string = '';
-  formSubCategory: string = '';
+  formCategory: string | null = null;
+  formSubCategory: string | null = null;
   formCode: string = '';
   formName: string = '';
   formDescription: string = '';
@@ -100,14 +105,47 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
   dialogCategoryOptions: { label: string; value: string }[] = [];
   dialogSubCategoryOptions: { label: string; value: string }[] = [];
 
+  // 個人化表格欄位顯示 (FieldView)
+  readonly componentName = 'SettingComponent';
+  readonly defaultColumns: { field: string; label: string; visible: boolean }[] = [
+    { field: 'tenant', label: '租戶識別', visible: true },
+    { field: 'category', label: '大維度 (Category)', visible: true },
+    { field: 'subCategory', label: '子分類 (SubCategory)', visible: true },
+    { field: 'code', label: '設定代碼 (Code)', visible: true },
+    { field: 'nameAndDesc', label: '顯示名稱與說明', visible: true },
+    { field: 'value', label: '配置數值 (Value)', visible: true },
+    { field: 'priorityNo', label: '順序號', visible: true },
+    { field: 'activeFlag', label: '狀態', visible: true }
+  ];
+  columns: { field: string; label: string; visible: boolean }[] = [];
+  draftColumns: { field: string; label: string; visible: boolean }[] = [];
+
   constructor(
     private settingService: SettingService,
     private tenantService: TenantService,
+    private customisationService: CustomisationService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    // 1. 先嘗試從本地快取瞬間初始化 (防重新整理閃爍)
+    const localFields = this.customisationService.getLocalCustomisation(this.componentName, 'FieldView');
+    if (localFields && localFields.length > 0) {
+      const localSet = new Set(localFields);
+      this.columns = this.defaultColumns.map((col) => ({
+        ...col,
+        visible: localSet.has(col.field)
+      }));
+    } else {
+      // 尚未配置 -> 預設全顯
+      this.columns = this.defaultColumns.map((col) => ({ ...col, visible: true }));
+    }
+
+    // 2. 向後端同步最新個人化配置 (若尚未配置則維持全顯，直到第一次儲存)
+    this.loadColumnCustomisation();
+
     // 訂閱全域租戶變更
     this.tenantSub = this.tenantService.tenant$.subscribe((tenant) => {
       this.currentTenant = tenant;
@@ -159,6 +197,9 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
    * 彈窗 Category 異動時載入 SubCategory (由後端 API 提供)
    */
   onDialogCategoryChange(): void {
+    if (!this.formCategory) {
+      this.formCategory = null;
+    }
     this.dialogSubCategoryOptions = [];
     if (this.formCategory) {
       this.settingService.getSubCategories(this.formCategory, this.currentTenant).subscribe({
@@ -245,7 +286,7 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
     this.isEditMode = false;
     this.editId = null;
     this.formTenant = this.currentTenant;
-    this.formCategory = '';
+    this.formCategory = null;
     this.formSubCategory = '';
     this.formCode = '';
     this.formName = '';
@@ -265,7 +306,7 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
     this.editId = item.id;
     this.formTenant = item.tenant;
     this.formCategory = item.category;
-    this.formSubCategory = item.subCategory || '';
+    this.formSubCategory = item.subCategory || null;
     this.formCode = item.code;
     this.formName = item.name;
     this.formDescription = item.description || '';
@@ -292,8 +333,8 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
 
     if (this.isEditMode && this.editId) {
       const updateReq: UpdateSettingRequest = {
-        category: this.formCategory,
-        subCategory: this.formSubCategory,
+        category: this.formCategory!,
+        subCategory: this.formSubCategory || undefined,
         name: this.formName,
         description: this.formDescription,
         value: this.formValue,
@@ -322,8 +363,8 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
     } else {
       const createReq: CreateSettingRequest = {
         tenant: this.formTenant || this.currentTenant,
-        category: this.formCategory,
-        subCategory: this.formSubCategory,
+        category: this.formCategory!,
+        subCategory: this.formSubCategory || undefined,
         code: this.formCode,
         name: this.formName,
         description: this.formDescription,
@@ -383,5 +424,87 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  /**
+   * 載入使用者欄位個人化配置 (若查無紀錄自動 Fallback 預設全顯)
+   */
+  loadColumnCustomisation(): void {
+    this.customisationService.getCustomisation(this.componentName, 'FieldView').subscribe({
+      next: (fields) => {
+        if (fields && fields.length > 0) {
+          const visibleSet = new Set(fields);
+          this.columns = this.defaultColumns.map((col) => ({
+            ...col,
+            visible: visibleSet.has(col.field)
+          }));
+        } else {
+          // 後端尚未配置 -> 若無本地快取則顯示全部欄位 (不主動存入，等到使用者第一次點擊儲存才存)
+          const local = this.customisationService.getLocalCustomisation(this.componentName, 'FieldView');
+          if (!local) {
+            this.columns = this.defaultColumns.map((col) => ({ ...col, visible: true }));
+          }
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.warn('載入欄位自訂設定失敗，採用目前佈局', err);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  /**
+   * 開啟欄位自訂浮動面板，建立暫存 Draft 狀態
+   */
+  openColumnCustomisation(event: Event, op: OverlayPanel): void {
+    this.draftColumns = this.columns.map((c) => ({ ...c }));
+    op.toggle(event);
+  }
+
+  /**
+   * 提交並持久化儲存欄位自訂配置 (傳遞 field 陣列，後端以逗號分隔儲存)
+   */
+  saveColumnCustomisation(op: OverlayPanel): void {
+    const visibleFields: string[] = this.draftColumns
+      .filter((c) => c.visible)
+      .map((c) => c.field);
+
+    this.customisationService.saveCustomisation(this.componentName, visibleFields, 'FieldView').subscribe({
+      next: () => {
+        this.columns = this.draftColumns.map((c) => ({ ...c }));
+        op.hide();
+        this.cdr.markForCheck();
+        this.messageService.add({
+          severity: 'success',
+          summary: '儲存成功',
+          detail: '表格欄位顯示偏好已儲存並生效',
+          life: 3000
+        });
+      },
+      error: (err) => {
+        console.error('儲存欄位配置失敗', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: '儲存失敗',
+          detail: '儲存欄位自訂設定失敗'
+        });
+      }
+    });
+  }
+
+  /**
+   * 取消並拋棄暫存 Draft 狀態
+   */
+  cancelColumnCustomisation(op: OverlayPanel): void {
+    op.hide();
+  }
+
+  /**
+   * 檢查特定欄位當前是否顯示
+   */
+  isColumnVisible(field: string): boolean {
+    const col = this.columns.find((c) => c.field === field);
+    return col ? col.visible : true;
   }
 }

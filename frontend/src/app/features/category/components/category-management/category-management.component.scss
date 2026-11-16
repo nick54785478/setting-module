@@ -130,8 +130,27 @@
         }
 
         .toolbar-right {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+
           @media (max-width: 640px) {
             align-self: flex-start;
+          }
+
+          .column-config-btn {
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.3rem 0.75rem;
+            color: #2563eb;
+            border-color: #bfdbfe;
+            background: #eff6ff;
+
+            &:hover {
+              background: #dbeafe;
+              border-color: #93c5fd;
+              color: #1d4ed8;
+            }
           }
 
           .tenant-tag-indicator {
@@ -347,6 +366,69 @@
         flex: 1;
         justify-content: center;
       }
+    }
+  }
+}
+
+/* 欄位自訂彈跳選單 */
+::ng-deep .column-overlay-panel {
+  .p-overlaypanel-content {
+    padding: 0;
+  }
+}
+
+.column-customisation-box {
+  width: 230px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .popover-header {
+    padding: 0.75rem 1rem 0.5rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+
+    .popover-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+  }
+
+  .popover-content {
+    padding: 0.6rem 1rem;
+    max-height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+
+    .column-option-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+
+      .option-label {
+        font-size: 0.85rem;
+        color: #334155;
+        cursor: pointer;
+        user-select: none;
+      }
+    }
+  }
+
+  .popover-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border-top: 1px solid #f1f5f9;
+    background: #f8fafc;
+
+    .footer-btn {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      border-radius: 4px;
     }
   }
 }
