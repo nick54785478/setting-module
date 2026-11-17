@@ -2,6 +2,7 @@ package com.module.setting.infrastructure.adapter;
 
 import com.module.setting.application.port.out.SettingRepositoryPort;
 import com.module.setting.application.shared.command.CreateSettingCommand;
+import com.module.setting.application.shared.command.ReorderSettingItemCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
 import com.module.setting.application.shared.context.UserContextHolder;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
@@ -27,6 +28,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -181,7 +183,7 @@ public class SettingRepositoryAdapter implements SettingRepositoryPort {
     public List<SettingOptionGottenResult> findCategoryOptions(String tenant) {
         String resolvedTenant = resolveTenant(tenant);
         // 直接從獨立的 SettingCategory 字典倉儲取得大維度清單
-        List<SettingCategory> categories = categoryJpaRepository.findAllByTenantOrAll(resolvedTenant, YesNo.Y);
+        List<SettingCategory> categories = categoryJpaRepository.findAllByTenant(resolvedTenant, YesNo.Y);
         return categories.stream()
                 .map(c -> {
                     String label = String.format("%s (%s)", c.getName(), c.getCode());
@@ -206,6 +208,37 @@ public class SettingRepositoryAdapter implements SettingRepositoryPort {
             setting.delete();
             settingJpaRepository.save(setting);
         });
+    }
+
+    @Override
+    public List<SettingGottenResult> reorder(List<ReorderSettingItemCommand> commands) {
+        if (commands == null || commands.isEmpty()) {
+            return List.of();
+        }
+
+        List<Setting> updatedSettings = new ArrayList<>();
+        for (int i = 0; i < commands.size(); i++) {
+            ReorderSettingItemCommand cmd = commands.get(i);
+            if (cmd == null || cmd.id() == null) {
+                continue;
+            }
+            int priority = (cmd.priorityNo() != null && cmd.priorityNo() > 0)
+                    ? cmd.priorityNo()
+                    : (i + 1);
+
+            Optional<Setting> optionalSetting = settingJpaRepository.findById(cmd.id());
+            if (optionalSetting.isPresent()) {
+                Setting setting = optionalSetting.get();
+                setting.updatePriority(priority);
+                updatedSettings.add(settingJpaRepository.save(setting));
+            }
+        }
+
+        return updatedSettings.stream()
+                .sorted(Comparator.comparing(Setting::getPriorityNo)
+                        .thenComparing(Setting::getId))
+                .map(settingDtoAssembler::toResult)
+                .toList();
     }
 
     /**

@@ -5,8 +5,11 @@ import com.module.setting.application.port.in.DeleteSettingUseCase;
 import com.module.setting.application.port.in.GetSettingOptionUseCase;
 import com.module.setting.application.port.in.GetSettingPagedUseCase;
 import com.module.setting.application.port.in.GetSettingUseCase;
+import com.module.setting.application.port.in.ReorderSettingUseCase;
 import com.module.setting.application.port.in.UpdateSettingUseCase;
 import com.module.setting.application.shared.command.DeleteSettingCommand;
+import com.module.setting.application.shared.command.UpdateSettingCommand;
+import com.module.setting.application.shared.context.UserContextHolder;
 import com.module.setting.application.shared.result.PagedDataGottenResult;
 import com.module.setting.application.shared.result.SettingCreatedResult;
 import com.module.setting.application.shared.result.SettingGottenResult;
@@ -14,12 +17,15 @@ import com.module.setting.application.shared.result.SettingOptionGottenResult;
 import com.module.setting.application.shared.result.SettingUpdatedResult;
 import com.module.setting.presentation.assembler.SettingResourceAssembler;
 import com.module.setting.presentation.resource.in.CreateSettingResource;
+import com.module.setting.presentation.resource.in.ReorderSettingItemResource;
 import com.module.setting.presentation.resource.in.UpdateSettingResource;
 import com.module.setting.presentation.resource.out.SettingCreatedResource;
 import com.module.setting.presentation.resource.out.SettingGottenResource;
 import com.module.setting.presentation.resource.out.SettingOptionGottenResource;
 import com.module.setting.presentation.resource.out.SettingPagedGottenResource;
 import com.module.setting.presentation.resource.out.SettingUpdatedResource;
+import com.module.setting.presentation.resource.out.TenantLocaleOptionGottenResource;
+import com.module.setting.presentation.resource.out.TenantMenuItemGottenResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -58,6 +64,7 @@ public class SettingController {
     private final GetSettingPagedUseCase getSettingPagedUseCase;
     private final GetSettingOptionUseCase getSettingOptionUseCase;
     private final DeleteSettingUseCase deleteSettingUseCase;
+    private final ReorderSettingUseCase reorderSettingUseCase;
     private final SettingResourceAssembler settingResourceAssembler;
 
     public SettingController(CreateSettingUseCase createSettingUseCase,
@@ -66,6 +73,7 @@ public class SettingController {
                              GetSettingPagedUseCase getSettingPagedUseCase,
                              GetSettingOptionUseCase getSettingOptionUseCase,
                              DeleteSettingUseCase deleteSettingUseCase,
+                             ReorderSettingUseCase reorderSettingUseCase,
                              SettingResourceAssembler settingResourceAssembler) {
         this.createSettingUseCase = createSettingUseCase;
         this.updateSettingUseCase = updateSettingUseCase;
@@ -73,6 +81,7 @@ public class SettingController {
         this.getSettingPagedUseCase = getSettingPagedUseCase;
         this.getSettingOptionUseCase = getSettingOptionUseCase;
         this.deleteSettingUseCase = deleteSettingUseCase;
+        this.reorderSettingUseCase = reorderSettingUseCase;
         this.settingResourceAssembler = settingResourceAssembler;
     }
 
@@ -231,5 +240,204 @@ public class SettingController {
             @PathVariable Long id) {
         deleteSettingUseCase.delete(new DeleteSettingCommand(id));
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 取得指定租戶已啟用之系統語系列表 (供 Header 地球選單使用)
+     *
+     * @param tenant 租戶代碼 (可選)
+     * @return 語系選項清單
+     */
+    @Operation(summary = "取得指定租戶之啟用系統語系列表", description = "依據租戶代碼檢索 category=LOCALE 且有效之語系配置，由各 Tenant 獨立定義與維護，不使用全域回退")
+    @ApiResponse(responseCode = "200", description = "檢索成功")
+    @GetMapping("/locales")
+    public ResponseEntity<List<TenantLocaleOptionGottenResource>> getTenantLocales(
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
+            @RequestParam(required = false) String tenant) {
+        String resolvedTenant = (tenant != null && !tenant.isBlank())
+                ? tenant
+                : UserContextHolder.getTenant();
+        if (resolvedTenant == null || resolvedTenant.isBlank()) {
+            resolvedTenant = "CW";
+        }
+
+        List<SettingGottenResult> list = getSettingUseCase.getByCategory(resolvedTenant, "LOCALE");
+
+        List<TenantLocaleOptionGottenResource> response = list.stream()
+                .map(item -> new TenantLocaleOptionGottenResource(
+                        item.id(),
+                        item.tenant(),
+                        item.code(),
+                        item.name(),
+                        item.description(),
+                        "DEFAULT".equalsIgnoreCase(item.value()),
+                        item.priorityNo(),
+                        item.activeFlag()
+                ))
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 取得指定租戶之所有系統語系列表 (包含停用，供語系維護彈窗使用)
+     *
+     * @param tenant 租戶代碼 (可選)
+     * @return 完整語系清單
+     */
+    @Operation(summary = "取得指定租戶之所有語系列表 (含停用)", description = "供維護彈窗檢視與編輯當前租戶的所有語系項目")
+    @ApiResponse(responseCode = "200", description = "檢索成功")
+    @GetMapping("/locales/all")
+    public ResponseEntity<List<TenantLocaleOptionGottenResource>> getAllTenantLocales(
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
+            @RequestParam(required = false) String tenant) {
+        String resolvedTenant = (tenant != null && !tenant.isBlank())
+                ? tenant
+                : UserContextHolder.getTenant();
+        if (resolvedTenant == null || resolvedTenant.isBlank()) {
+            resolvedTenant = "CW";
+        }
+
+        var query = settingResourceAssembler.toPagedQuery(
+                resolvedTenant, "LOCALE", null, null, null, null, 0, 100);
+        var pagedResult = getSettingPagedUseCase.getPaged(query);
+
+        List<TenantLocaleOptionGottenResource> response = pagedResult.content().stream()
+                .map(item -> new TenantLocaleOptionGottenResource(
+                        item.id(),
+                        item.tenant(),
+                        item.code(),
+                        item.name(),
+                        item.description(),
+                        "DEFAULT".equalsIgnoreCase(item.value()),
+                        item.priorityNo(),
+                        item.activeFlag()
+                ))
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 設定指定語系為該租戶之預設語系
+     *
+     * @param id 設定主鍵 ID
+     * @return 更新後之語系資源
+     */
+    @Operation(summary = "設定為租戶預設語系", description = "將該語系設為 DEFAULT，並清除該租戶下其他語系的預設標記")
+    @ApiResponse(responseCode = "200", description = "設定成功")
+    @PutMapping("/locales/{id}/default")
+    public ResponseEntity<TenantLocaleOptionGottenResource> setLocaleDefault(
+            @Parameter(description = "設定主鍵 ID", required = true, example = "1")
+            @PathVariable Long id) {
+        SettingGottenResult target = getSettingUseCase.getById(id);
+        String tenant = target.tenant();
+
+        // 取得該租戶所有語系，若有舊的 DEFAULT 則更新清空
+        List<SettingGottenResult> allLocales = getSettingUseCase.getByCategory(tenant, "LOCALE");
+        for (SettingGottenResult item : allLocales) {
+            if ("DEFAULT".equalsIgnoreCase(item.value()) && !item.id().equals(id)) {
+                var clearCommand = new UpdateSettingCommand(
+                        item.id(),
+                        item.category(),
+                        item.subCategory(),
+                        item.name(),
+                        item.description(),
+                        "",
+                        item.priorityNo(),
+                        item.activeFlag()
+                );
+                updateSettingUseCase.update(clearCommand);
+            }
+        }
+
+        // 將 target 設為 DEFAULT
+        var updateCommand = new UpdateSettingCommand(
+                target.id(),
+                target.category(),
+                target.subCategory(),
+                target.name(),
+                target.description(),
+                "DEFAULT",
+                target.priorityNo(),
+                target.activeFlag()
+        );
+        SettingUpdatedResult updated = updateSettingUseCase.update(updateCommand);
+
+        return ResponseEntity.ok(new TenantLocaleOptionGottenResource(
+                updated.id(),
+                updated.tenant(),
+                updated.code(),
+                updated.name(),
+                updated.description(),
+                true,
+                updated.priorityNo(),
+                updated.activeFlag()
+        ));
+    }
+
+    /**
+     * 取得指定租戶已啟用之側邊欄選單清單
+     *
+     * @param tenant 租戶代碼 (可選)
+     * @return 側邊欄選單項目清單
+     */
+    @Operation(summary = "取得指定租戶之啟用側邊欄選單清單", description = "依據租戶代碼檢索 category=MENU 且有效之選單配置，依 priorityNo 排序")
+    @ApiResponse(responseCode = "200", description = "檢索成功")
+    @GetMapping("/menus")
+    public ResponseEntity<List<TenantMenuItemGottenResource>> getTenantMenus(
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
+            @RequestParam(required = false) String tenant) {
+        String resolvedTenant = (tenant != null && !tenant.isBlank())
+                ? tenant
+                : UserContextHolder.getTenant();
+        if (resolvedTenant == null || resolvedTenant.isBlank()) {
+            resolvedTenant = "CW";
+        }
+
+        List<SettingGottenResult> list = getSettingUseCase.getByCategory(resolvedTenant, "MENU");
+
+        List<TenantMenuItemGottenResource> response = list.stream()
+                .map(settingResourceAssembler::toMenuItemResource)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 批次排序設定項目
+     *
+     * @param resources 排序請求項目清單 (包含 id 與選擇性的 priorityNo)
+     * @return 排序更新後之設定回應清單 (依 priorityNo 升冪排序)
+     */
+    @Operation(summary = "批次排序設定項目", description = "更新傳入設定之 priorityNo，並確保回傳資料嚴格依照 priorityNo 升冪排序")
+    @ApiResponse(responseCode = "200", description = "排序更新成功")
+    @ApiResponse(responseCode = "400", description = "傳入參數格式不符")
+    @PutMapping("/sort")
+    public ResponseEntity<List<SettingGottenResource>> reorderSettings(
+            @Valid @RequestBody List<ReorderSettingItemResource> resources) {
+        var commands = settingResourceAssembler.toReorderCommands(resources);
+        List<SettingGottenResult> results = reorderSettingUseCase.reorder(commands);
+        List<SettingGottenResource> response = results.stream()
+                .map(settingResourceAssembler::toGottenResource)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 批次排序側邊欄選單項目
+     *
+     * @param resources 排序請求項目清單 (主要用於排序選單項目)
+     * @return 排序更新後之側邊欄選單項目清單 (依 priorityNo 升冪排序)
+     */
+    @Operation(summary = "批次排序側邊欄選單項目", description = "主要用來排序側邊欄選單項目，更新 priorityNo 並保證依 priorityNo 升冪排序回傳")
+    @ApiResponse(responseCode = "200", description = "選單排序更新成功")
+    @ApiResponse(responseCode = "400", description = "傳入參數格式不符")
+    @PutMapping("/menus/sort")
+    public ResponseEntity<List<TenantMenuItemGottenResource>> reorderMenus(
+            @Valid @RequestBody List<ReorderSettingItemResource> resources) {
+        var commands = settingResourceAssembler.toReorderCommands(resources);
+        List<SettingGottenResult> results = reorderSettingUseCase.reorder(commands);
+        List<TenantMenuItemGottenResource> response = results.stream()
+                .map(settingResourceAssembler::toMenuItemResource)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 }

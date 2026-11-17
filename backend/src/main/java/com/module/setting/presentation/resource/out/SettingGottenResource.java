@@ -24,7 +24,7 @@ public record SettingGottenResource(
         @Schema(description = "設定主鍵 ID", example = "1")
         Long id,
 
-        @Schema(description = "租戶識別碼", example = "ALL")
+        @Schema(description = "租戶識別碼", example = "CW")
         String tenant,
 
         @Schema(description = "功能大分類 / 維度", example = "FUNCTION")

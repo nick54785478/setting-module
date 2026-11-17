@@ -92,14 +92,14 @@ public interface SettingJpaRepository extends JpaRepository<Setting, Long>, JpaS
 
     /**
      * 查詢元資料層 (META) 註冊之 Category 定義清單 (Category = 'META' 且 SubCategory = 'CATEGORY')
-     * 支援指定租戶或全域 'ALL' 定義，依 priorityNo 升冪排序
+     * 支援指定租戶個別定義，依 priorityNo 升冪排序
      *
      * @param tenant     租戶代碼 (可選)
      * @param activeFlag 有效狀態
      * @return Category 元資料定義項目清單
      */
     @Query("SELECT s FROM Setting s " +
-           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant OR s.scope.tenant = 'ALL') " +
+           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant) " +
            "AND s.scope.category = 'META' " +
            "AND s.scope.subCategory = 'CATEGORY' " +
            "AND s.activeFlag = :activeFlag " +
@@ -115,7 +115,7 @@ public interface SettingJpaRepository extends JpaRepository<Setting, Long>, JpaS
      * @return 不重複的 SubCategory 字串清單
      */
     @Query("SELECT DISTINCT s.scope.subCategory FROM Setting s " +
-           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant OR s.scope.tenant = 'ALL') " +
+           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant) " +
            "AND s.scope.category = :category " +
            "AND s.scope.subCategory IS NOT NULL " +
            "AND s.scope.subCategory <> '' " +
@@ -133,7 +133,7 @@ public interface SettingJpaRepository extends JpaRepository<Setting, Long>, JpaS
      * @return 實際存在於資料表中的 Category 清單
      */
     @Query("SELECT DISTINCT s.scope.category FROM Setting s " +
-           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant OR s.scope.tenant = 'ALL') " +
+           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant) " +
            "AND s.scope.category IS NOT NULL AND s.scope.category <> '' " +
            "AND s.activeFlag = :activeFlag " +
            "ORDER BY s.scope.category ASC")
@@ -147,7 +147,7 @@ public interface SettingJpaRepository extends JpaRepository<Setting, Long>, JpaS
      * @return 不重複的 Category 字串清單
      */
     @Query("SELECT DISTINCT s.scope.category FROM Setting s " +
-           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant OR s.scope.tenant = 'ALL') " +
+           "WHERE (:tenant IS NULL OR :tenant = '' OR s.scope.tenant = :tenant) " +
            "AND s.scope.category <> 'META' " +
            "AND s.activeFlag = :activeFlag " +
            "ORDER BY s.scope.category ASC")

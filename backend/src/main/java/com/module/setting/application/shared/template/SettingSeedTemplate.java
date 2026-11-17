@@ -19,7 +19,7 @@ public final class SettingSeedTemplate {
     /**
      * 產出全域基礎業務設定範本清單
      *
-     * @param tenant 租戶代碼 (預設建議為 "ALL")
+     * @param tenant 租戶代碼 (建議為指定租戶，如 "CW")
      * @return 業務設定建立指令清單（初始為空清單，不預載任何業務資料）
      */
     public static List<CreateSettingCommand> getDefaultTemplates(String tenant) {

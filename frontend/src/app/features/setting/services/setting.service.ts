@@ -111,4 +111,14 @@ export class SettingService {
   public delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
+
+  /**
+   * 批次更新設定項目順序號 (priorityNo)
+   *
+   * @param items 欲更新順序之項目清單 (包含 id 與 optional priorityNo)
+   * @return 排序更新後之設定清單 (依 priorityNo 升冪排列)
+   */
+  public reorderSettings(items: { id: number; priorityNo?: number }[]): Observable<SettingItem[]> {
+    return this.http.put<SettingItem[]>(`${this.baseUrl}/sort`, items);
+  }
 }

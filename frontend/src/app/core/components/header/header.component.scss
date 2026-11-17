@@ -110,6 +110,46 @@
       }
     }
 
+    .locale-selector-container {
+      position: relative;
+
+      .locale-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0.38rem 0.75rem;
+        color: #334155;
+        font-size: 0.82rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #f1f5f9;
+          border-color: #94a3b8;
+          color: #0f172a;
+        }
+
+        .globe-icon {
+          color: #2563eb;
+          font-size: 0.95rem;
+        }
+
+        .current-locale-text {
+          font-weight: 600;
+          color: #1e293b;
+        }
+
+        .arrow-icon {
+          font-size: 0.7rem;
+          color: #64748b;
+        }
+      }
+    }
+
     .divider-vertical {
       width: 1px;
       height: 22px;
@@ -291,6 +331,208 @@
         .user-meta {
           display: none;
         }
+      }
+    }
+  }
+}
+
+/* 語系下拉 Popover 樣式 */
+::ng-deep .locale-overlay-panel {
+  .p-overlaypanel-content {
+    padding: 0 !important;
+  }
+}
+
+.locale-popover-content {
+  width: 250px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  .popover-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+
+    .title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+
+      i {
+        color: #2563eb;
+      }
+    }
+
+    .tenant-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+  }
+
+  .locale-list {
+    padding: 0.4rem;
+    max-height: 220px;
+    overflow-y: auto;
+
+    .locale-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      color: #334155;
+      transition: background 0.15s;
+
+      &:hover {
+        background: #f8fafc;
+        color: #0f172a;
+      }
+
+      &.active {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 600;
+      }
+
+      .locale-left {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+
+        .check-active {
+          color: #2563eb;
+        }
+
+        .locale-code {
+          font-size: 0.75rem;
+          color: #94a3b8;
+        }
+      }
+
+      .default-badge {
+        font-size: 0.7rem;
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+        padding: 0.05rem 0.35rem;
+        border-radius: 3px;
+      }
+    }
+
+    .empty-locales {
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+  }
+
+  .popover-footer {
+    padding: 0.5rem;
+    border-top: 1px solid #f1f5f9;
+    background: #f8fafc;
+
+    .manage-locale-btn {
+      font-size: 0.82rem;
+      color: #475569;
+      justify-content: center;
+
+      &:hover {
+        color: #2563eb;
+      }
+    }
+  }
+}
+
+/* 租戶語系維護 Dialog 樣式 */
+.locale-dialog-desc {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.83rem;
+  color: #166534;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+
+  i {
+    font-size: 1rem;
+    margin-top: 0.1rem;
+    color: #16a34a;
+  }
+
+  code {
+    background: #dcfce7;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+}
+
+.locale-table-section {
+  .default-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  .status-badge {
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: #64748b;
+
+    &.active {
+      background: #dcfce7;
+      color: #15803d;
+    }
+  }
+}
+
+.locale-form-card {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  padding: 1rem;
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+
+      &.checkbox-field {
+        flex-direction: row;
+        align-items: center;
       }
     }
   }

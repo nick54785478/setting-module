@@ -54,7 +54,7 @@ public class OpenApiConfig {
                                 .type(SecurityScheme.Type.APIKEY)
                                 .in(SecurityScheme.In.HEADER)
                                 .name("X-Tenant-Id")
-                                .description("多租戶隔離識別碼 (Request Header)。若未傳入，系統預設自動採用 'ALL' / 'default'。")))
+                                .description("多租戶隔離識別碼 (Request Header)。若未傳入，系統預設自動採用 'CW'。")))
                 .addSecurityItem(new SecurityRequirement().addList(TENANT_HEADER_SCHEME));
     }
 }

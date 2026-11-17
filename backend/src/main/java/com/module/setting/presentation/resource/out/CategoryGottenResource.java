@@ -9,7 +9,7 @@ public record CategoryGottenResource(
         @Schema(description = "維度主鍵 ID", example = "1")
         Long id,
 
-        @Schema(description = "所屬租戶", example = "ALL")
+        @Schema(description = "所屬租戶", example = "CW")
         String tenant,
 
         @Schema(description = "維度唯一代碼 (下拉選單 value / code)", example = "FUNCTION")

@@ -2,7 +2,9 @@ package com.module.setting.application.service;
 
 import com.module.setting.application.port.out.SettingRepositoryPort;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
+import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingUpdatedResult;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -106,5 +108,27 @@ class UpdateSettingUseCaseTest {
 
         assertTrue(exception.getMessage().contains("Setting not found with id: 999"));
         verify(settingRepositoryPort, times(1)).update(nonExistentCommand);
+    }
+
+    @Test
+    @DisplayName("停用預設語系時應拋出業務例外")
+    void shouldThrowExceptionWhenDeactivatingDefaultLocale() {
+        // Given: 原設定為 DEFAULT 語系
+        SettingGottenResult defaultLocale = new SettingGottenResult(
+                10L, "CW", "LOCALE", "UI", "zh-TW", "繁體中文", "說明", "DEFAULT", 1, "Y"
+        );
+        when(settingRepositoryPort.findById(10L)).thenReturn(Optional.of(defaultLocale));
+
+        // When: 嘗試將 activeFlag 更新為 N (停用)
+        UpdateSettingCommand deactivateCommand = new UpdateSettingCommand(
+                10L, "LOCALE", "UI", "繁體中文", "說明", "DEFAULT", 1, "N"
+        );
+
+        // Then
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                settingApplicationService.update(deactivateCommand)
+        );
+        assertTrue(ex.getMessage().contains("租戶預設語系 (DEFAULT) 正在使用中，不得停用"));
+        verify(settingRepositoryPort, never()).update(any());
     }
 }

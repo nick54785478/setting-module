@@ -142,6 +142,17 @@ public class Setting {
     }
 
     /**
+     * 更新排序順序號
+     *
+     * @param priorityNo 順序號
+     */
+    public void updatePriority(Integer priorityNo) {
+        if (priorityNo != null && priorityNo > 0) {
+            this.priorityNo = priorityNo;
+        }
+    }
+
+    /**
      * 邏輯刪除 (標記 activeFlag = 'N')
      */
     public void delete() {

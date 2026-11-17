@@ -19,6 +19,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { TenantService } from '../../../../core/services/tenant.service';
 import { CustomisationService } from '../../../../core/services/customisation.service';
+import { LocaleService } from '../../../../core/services/locale.service';
+import { MenuService } from '../../../../core/services/menu.service';
 import { SettingService } from '../../services/setting.service';
 import {
   CreateSettingRequest,
@@ -124,6 +126,8 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
     private settingService: SettingService,
     private tenantService: TenantService,
     private customisationService: CustomisationService,
+    private localeService: LocaleService,
+    private menuService: MenuService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
@@ -230,7 +234,7 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
   loadData(): void {
     this.loading = true;
     const params: SettingQueryParams = {
-      tenant: this.currentTenant !== 'ALL' ? this.currentTenant : undefined,
+      tenant: this.currentTenant || undefined,
       category: this.filterCategory || undefined,
       subCategory: this.filterSubCategory || undefined,
       code: this.filterCode || undefined,
@@ -332,6 +336,15 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
     }
 
     if (this.isEditMode && this.editId) {
+      if (this.formCategory === 'LOCALE' && this.formValue?.toUpperCase() === 'DEFAULT' && this.formActiveFlag === 'N') {
+        this.messageService.add({
+          severity: 'warn',
+          summary: '操作限制',
+          detail: '租戶預設語系 (DEFAULT) 正在使用中，不得停用。請先指派其他有效語系為預設後再執行停用。'
+        });
+        return;
+      }
+
       const updateReq: UpdateSettingRequest = {
         category: this.formCategory!,
         subCategory: this.formSubCategory || undefined,
@@ -351,6 +364,9 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
           });
           this.dialogVisible = false;
           this.loadData();
+          // 若更新項目涉及語系或選單，呼叫 API 刷新資料
+          this.localeService.refreshTenantLocales(this.currentTenant).subscribe();
+          this.menuService.refreshTenantMenus(this.currentTenant).subscribe();
         },
         error: (err) => {
           this.messageService.add({
@@ -381,6 +397,9 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
           });
           this.dialogVisible = false;
           this.loadData();
+          // 若新增項目涉及語系或選單，呼叫 API 刷新資料
+          this.localeService.refreshTenantLocales(this.currentTenant).subscribe();
+          this.menuService.refreshTenantMenus(this.currentTenant).subscribe();
         },
         error: (err) => {
           this.messageService.add({
@@ -397,6 +416,15 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
    * 刪除確認
    */
   confirmDelete(item: SettingItem): void {
+    if (item.category === 'LOCALE' && item.value?.toUpperCase() === 'DEFAULT') {
+      this.messageService.add({
+        severity: 'warn',
+        summary: '操作限制',
+        detail: '租戶預設語系 (DEFAULT) 正在使用中，不得停用或刪除。請先指派其他有效語系為預設後再刪除。'
+      });
+      return;
+    }
+
     this.confirmationService.confirm({
       message: `確定要停用/刪除設定項目 [${item.name} (${item.code})] 嗎？`,
       header: '刪除確認',
@@ -413,6 +441,9 @@ export class SettingManagementComponent implements OnInit, OnDestroy {
               detail: `設定 [${item.code}] 已標記為停用`
             });
             this.loadData();
+            // 若刪除項目涉及語系或選單，呼叫 API 刷新資料
+            this.localeService.refreshTenantLocales(this.currentTenant).subscribe();
+            this.menuService.refreshTenantMenus(this.currentTenant).subscribe();
           },
           error: () => {
             this.messageService.add({

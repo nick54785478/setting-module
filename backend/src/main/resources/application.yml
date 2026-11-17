@@ -22,7 +22,7 @@ spring:
 setting:
   init:
     enabled: true            # 是否在啟動時自動初始化預設種子資料 (生產環境可依需要開關)
-    default-tenant: ALL      # 預設初始化的租戶代碼 (預設 ALL)
+    default-tenant: CW       # 預設初始化的租戶代碼 (預設 CW)
 
 # SpringDoc OpenAPI 配置
 springdoc:

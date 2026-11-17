@@ -37,7 +37,7 @@ public class SettingCategoryApplicationService implements
     @Transactional(readOnly = true)
     public List<CategoryGottenResult> getAll(String tenant) {
         String resolvedTenant = resolveTenant(tenant);
-        return categoryJpaRepository.findAllByTenantOrAll(resolvedTenant, YesNo.Y).stream()
+        return categoryJpaRepository.findAllByTenant(resolvedTenant, YesNo.Y).stream()
                 .map(this::toResult)
                 .toList();
     }
@@ -46,7 +46,7 @@ public class SettingCategoryApplicationService implements
     @Transactional(readOnly = true)
     public List<CategoryGottenResult> getAllIncludeInactive(String tenant) {
         String resolvedTenant = resolveTenant(tenant);
-        return categoryJpaRepository.findAllByTenantOrAllIncludeInactive(resolvedTenant).stream()
+        return categoryJpaRepository.findAllByTenantIncludeInactive(resolvedTenant).stream()
                 .map(this::toResult)
                 .toList();
     }
@@ -116,7 +116,7 @@ public class SettingCategoryApplicationService implements
             return tenant.trim();
         }
         String contextTenant = UserContextHolder.getTenant();
-        return (contextTenant != null && !contextTenant.isBlank()) ? contextTenant : "ALL";
+        return (contextTenant != null && !contextTenant.isBlank()) ? contextTenant : "CW";
     }
 
     private CategoryGottenResult toResult(SettingCategory entity) {

@@ -52,7 +52,7 @@ public class SettingCategoryController {
     @ApiResponse(responseCode = "200", description = "查詢成功")
     @GetMapping
     public ResponseEntity<List<CategoryGottenResource>> list(
-            @Parameter(description = "租戶識別碼 (可選)", example = "ALL")
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
             @RequestParam(required = false) String tenant,
             @Parameter(description = "是否包含已停用項目", example = "false")
             @RequestParam(defaultValue = "false") boolean includeInactive) {

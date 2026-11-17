@@ -17,25 +17,25 @@ import java.util.Optional;
 public interface SettingCategoryJpaRepository extends JpaRepository<SettingCategory, Long> {
 
     /**
-     * 查詢指定租戶或全域 'ALL' 且符合有效性旗標的所有維度，依 priorityNo 升冪排序
+     * 查詢指定租戶且符合有效性旗標的所有維度，依 priorityNo 升冪排序
      *
      * @param tenant     租戶代碼 (可選)
      * @param activeFlag 有效性旗標
      * @return 符合條件的維度清單
      */
     @Query("SELECT c FROM SettingCategory c " +
-           "WHERE (:tenant IS NULL OR :tenant = '' OR c.tenant = :tenant OR c.tenant = 'ALL') " +
+           "WHERE (:tenant IS NULL OR :tenant = '' OR c.tenant = :tenant) " +
            "AND c.activeFlag = :activeFlag " +
            "ORDER BY c.priorityNo ASC")
-    List<SettingCategory> findAllByTenantOrAll(@Param("tenant") String tenant, @Param("activeFlag") YesNo activeFlag);
+    List<SettingCategory> findAllByTenant(@Param("tenant") String tenant, @Param("activeFlag") YesNo activeFlag);
 
     /**
-     * 查詢所有維度 (包含已停用)，依 priorityNo 升冪排序
+     * 查詢指定租戶之所有維度 (包含已停用)，依 priorityNo 升冪排序
      */
     @Query("SELECT c FROM SettingCategory c " +
-           "WHERE (:tenant IS NULL OR :tenant = '' OR c.tenant = :tenant OR c.tenant = 'ALL') " +
+           "WHERE (:tenant IS NULL OR :tenant = '' OR c.tenant = :tenant) " +
            "ORDER BY c.priorityNo ASC")
-    List<SettingCategory> findAllByTenantOrAllIncludeInactive(@Param("tenant") String tenant);
+    List<SettingCategory> findAllByTenantIncludeInactive(@Param("tenant") String tenant);
 
     /**
      * 依據主鍵與有效狀態查詢單一維度

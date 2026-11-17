@@ -2,6 +2,7 @@ package com.module.setting.application.service;
 
 import com.module.setting.application.shared.command.DeleteSettingCommand;
 import com.module.setting.application.port.out.SettingRepositoryPort;
+import com.module.setting.application.shared.result.SettingGottenResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
@@ -42,5 +47,23 @@ class DeleteSettingUseCaseTest {
 
         // Then
         verify(settingRepositoryPort, times(1)).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("刪除預設語系時應拋出業務例外")
+    void shouldThrowExceptionWhenDeletingDefaultLocale() {
+        // Given: 原設定為 DEFAULT 語系
+        SettingGottenResult defaultLocale = new SettingGottenResult(
+                10L, "CW", "LOCALE", "UI", "zh-TW", "繁體中文", "說明", "DEFAULT", 1, "Y"
+        );
+        when(settingRepositoryPort.findById(10L)).thenReturn(Optional.of(defaultLocale));
+
+        // When & Then
+        DeleteSettingCommand command = new DeleteSettingCommand(10L);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                settingApplicationService.delete(command)
+        );
+        assertTrue(ex.getMessage().contains("租戶預設語系 (DEFAULT) 正在使用中，不得刪除"));
+        verify(settingRepositoryPort, never()).deleteById(anyLong());
     }
 }

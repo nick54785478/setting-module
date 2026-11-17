@@ -23,7 +23,10 @@
 | **微服務維護成本** | 各團隊各自為政，重複開闢設定表與後台維護頁面 | **全企業共用標準四維坐標模型，提供統一 REST API 與 UI 後台** |
 | **架構字典管理** | 將元資料塞入業務表，造成冷啟動空白與選單錯亂 | **雙實體解耦（`SettingCategory` 字典 + `Setting` 業務設定）** |
 
-*詳細架構概念與白皮書請參閱：[doc/design/function-configurable-concept.md](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/function-configurable-concept.md)*
+*詳細架構概念與白皮書請參閱：
+* [Function Configurable 核心概念白皮書](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/function-configurable-concept.md)
+* [個人化表格欄位顯示 (FieldView) 設計文件](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/table-column-customisation-design.md)
+* [租戶系統語系配置與切換維護 (Tenant Locale Management) 設計文件](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/tenant-locale-management-design.md)
 
 ---
 
@@ -66,9 +69,13 @@ setting-module/
 ├── doc/                       # 系統核心架構設計規格與維運文件
 │   ├── design/
 │   │   ├── function-configurable-concept.md # Function Configurable 核心架構概念白皮書
-│   │   └── setting-architecture-sd.md       # 統一權威全景系統設計規格書 (v2.0.0)
+│   │   ├── setting-architecture-sd.md       # 統一權威全景系統設計規格書 (v2.0.0)
+│   │   ├── table-column-customisation-design.md # 表格欄位自定義顯示 (FieldView) 設計文件
+│   │   └── tenant-locale-management-design.md  # 租戶系統語系配置與切換維護設計文件
 │   ├── guide/
-│   │   └── manual-setting-configuration-guide.md # 系統設定與維度字典手動配置作業手冊
+│   │   ├── manual-setting-configuration-guide.md  # 系統設定與維度字典手動配置作業手冊
+│   │   ├── tenant-locale-configuration-guide.md   # 租戶語系自定義配置手冊與 Tenant 格式規範
+│   │   └── sidebar-menu-configuration-guide.md    # 側邊欄導航選單 Function Configurable 維護手冊
 │   └── BACKLOG.md             # 專案需求與技術債儲備清單 (BL-001)
 ├── .agents/                   # 架構與前後端開發規範準則 (AGENTS.md)
 └── README.md
@@ -176,6 +183,11 @@ npm start
 | `GET` | `/api/v1/settings/summary` | 多條件動態分頁查詢 (Specification，依 `priorityNo` 排序) | `category`, `subCategory`, `code`, `name`, `activeFlag`, `page`, `size` | `SettingPagedGottenResource` |
 | `GET` | `/api/v1/settings/categories` | 取得大分類下拉選單清單 | `tenant` (可選) | `List<SettingOptionGottenResource>` |
 | `GET` | `/api/v1/settings/categories/{cat}/sub-categories` | 依大分類取得真實子模組下拉選單 | `cat` (路徑變數), `tenant` (可選) | `List<SettingOptionGottenResource>` |
+| `PUT` | `/api/v1/settings/sort` | 批次排序設定項目 | `List<ReorderSettingItemResource>` (JSON) | `List<SettingGottenResource>` |
+| `PUT` | `/api/v1/settings/menus/sort` | 批次排序側邊欄選單項目 | `List<ReorderSettingItemResource>` (JSON) | `List<TenantMenuItemGottenResource>` |
+| `GET` | `/api/v1/settings/menus` | 取得指定租戶已啟用之側邊欄選單 | `tenant` (可選) | `List<TenantMenuItemGottenResource>` |
+| `GET` | `/api/v1/settings/locales` | 取得指定租戶已啟用之語系列表 | `tenant` (可選) | `List<TenantLocaleOptionGottenResource>` |
+| `PUT` | `/api/v1/settings/locales/{id}/default` | 將指定語系設為租戶預設語系 | `id` (路徑變數) | `TenantLocaleOptionGottenResource` |
 | `DELETE` | `/api/v1/settings/{id}` | 邏輯刪除設定 (`activeFlag='N'`) | - | 204 No Content |
 
 ---
@@ -183,8 +195,16 @@ npm start
 ## 🎨 前端架構與特色功能 (Frontend Architecture)
 
 * **現代化元件分離規範**：嚴格遵循 `.agents/frontend/AGENTS.md`，每個元件獨立維護 `.ts`、`.html` 與 `.scss`。
+* **側邊欄選單可視化拖拉排序 (Drag & Drop Reordering)**：
+  * 支援一鍵「切換拖拉排序」開關，各群組內提供 HTML5 原生拖曳把手與視覺化指示線。
+  * 放開滑鼠即時重算 `priorityNo` 並調用 `PUT /api/v1/settings/menus/sort` 持久化，提供 PrimeNG Toast 即時回饋。
+* **租戶語系切換與維護彈窗 (Tenant Locale Management)**：
+  * 頂部導航列內嵌地球 🌐 下拉切換器，支援即時切換語言與多租戶語系隔離。
+  * 提供「維護租戶語系」對話框，具備常用範本一鍵帶入、原子切換預設語系、停用/刪除三重防呆保護機制。
+* **個人化表格欄位顯示 (FieldView Customisation)**：
+  * 表格工具列支援「欄位」彈出設定盒，勾選/反選即時動態顯隱欄位，並支援個人化偏好持久化。
 * **雙功能視圖動態切換**：
-  * **功能設定管理**：提供企業級藍色高密度表格、二級聯動下拉選單、多維度即時篩選、分頁器與新增（支援手動新增子模組）/編輯 Modal。
+  * **功能設定管理**：提供企業級藍色高密度表格、二級聯動下拉選單、多維度即時篩選、分頁器與新增/編輯 Modal。
   * **元資料字典維護**：專門提供大維度字典之獨立列表、排序設定與啟用/停用管理。
 * **無縫導航與狀態同步**：
   * `NavigationService` 集中管理視圖狀態，點選側邊欄 ([SidebarComponent](file:///d:/桌面/ModuleWorkSpace/setting-module/frontend/src/app/core/components/sidebar/sidebar.component.ts)) 時，主視圖與頁首麵包屑導航 ([HeaderComponent](file:///d:/桌面/ModuleWorkSpace/setting-module/frontend/src/app/core/components/header/header.component.ts)) 即時同步切換。

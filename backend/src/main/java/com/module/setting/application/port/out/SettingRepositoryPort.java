@@ -122,4 +122,12 @@ public interface SettingRepositoryPort {
      * @param id 設定 ID
      */
     void deleteById(Long id);
+
+    /**
+     * 批次更新設定項目排序順序號，並回傳依 priorityNo 升冪排序之清單
+     *
+     * @param commands 排序指令清單
+     * @return 排序更新後之設定結果清單 (嚴格依 priorityNo 升冪排序)
+     */
+    List<SettingGottenResult> reorder(List<com.module.setting.application.shared.command.ReorderSettingItemCommand> commands);
 }

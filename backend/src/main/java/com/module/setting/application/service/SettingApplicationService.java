@@ -4,6 +4,7 @@ import com.module.setting.application.port.in.*;
 import com.module.setting.application.port.out.SettingRepositoryPort;
 import com.module.setting.application.shared.command.CreateSettingCommand;
 import com.module.setting.application.shared.command.DeleteSettingCommand;
+import com.module.setting.application.shared.command.ReorderSettingItemCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
 import com.module.setting.application.shared.result.PagedDataGottenResult;
@@ -32,7 +33,8 @@ public class SettingApplicationService implements
         GetSettingPagedUseCase,
         GetSettingOptionUseCase,
         InitTenantSettingUseCase,
-        DeleteSettingUseCase {
+        DeleteSettingUseCase,
+        ReorderSettingUseCase {
 
     private final SettingRepositoryPort settingRepositoryPort;
 
@@ -47,6 +49,7 @@ public class SettingApplicationService implements
 
     @Override
     public SettingUpdatedResult update(UpdateSettingCommand command) {
+        validateLocaleNotDeactivatedIfInUse(command);
         return settingRepositoryPort.update(command);
     }
 
@@ -125,6 +128,37 @@ public class SettingApplicationService implements
 
     @Override
     public void delete(DeleteSettingCommand command) {
+        validateLocaleNotDeletedIfInUse(command.id());
         settingRepositoryPort.deleteById(command.id());
+    }
+
+    @Override
+    public List<SettingGottenResult> reorder(List<ReorderSettingItemCommand> commands) {
+        if (commands == null || commands.isEmpty()) {
+            return List.of();
+        }
+        return settingRepositoryPort.reorder(commands);
+    }
+
+    private void validateLocaleNotDeactivatedIfInUse(UpdateSettingCommand command) {
+        settingRepositoryPort.findById(command.id()).ifPresent(setting -> {
+            boolean isLocale = "LOCALE".equalsIgnoreCase(setting.category())
+                    || (command.category() != null && "LOCALE".equalsIgnoreCase(command.category()));
+            if (isLocale) {
+                boolean isDefault = "DEFAULT".equalsIgnoreCase(setting.value());
+                boolean willDeactivate = "N".equalsIgnoreCase(command.activeFlag());
+                if (isDefault && willDeactivate) {
+                    throw new IllegalArgumentException("租戶預設語系 (DEFAULT) 正在使用中，不得停用。請先指派其他有效語系為預設後再執行停用。");
+                }
+            }
+        });
+    }
+
+    private void validateLocaleNotDeletedIfInUse(Long id) {
+        settingRepositoryPort.findById(id).ifPresent(setting -> {
+            if ("LOCALE".equalsIgnoreCase(setting.category()) && "DEFAULT".equalsIgnoreCase(setting.value())) {
+                throw new IllegalArgumentException("租戶預設語系 (DEFAULT) 正在使用中，不得刪除。請先指派其他有效語系為預設後再執行刪除。");
+            }
+        });
     }
 }

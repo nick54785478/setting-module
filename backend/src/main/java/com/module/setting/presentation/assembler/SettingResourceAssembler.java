@@ -1,6 +1,7 @@
 package com.module.setting.presentation.assembler;
 
 import com.module.setting.application.shared.command.CreateSettingCommand;
+import com.module.setting.application.shared.command.ReorderSettingItemCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
 import com.module.setting.application.shared.context.UserContextHolder;
 import com.module.setting.application.shared.query.GetSettingPagedQuery;
@@ -10,6 +11,7 @@ import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingOptionGottenResult;
 import com.module.setting.application.shared.result.SettingUpdatedResult;
 import com.module.setting.presentation.resource.in.CreateSettingResource;
+import com.module.setting.presentation.resource.in.ReorderSettingItemResource;
 import com.module.setting.presentation.resource.in.UpdateSettingResource;
 import com.module.setting.presentation.resource.out.*;
 import org.springframework.stereotype.Component;
@@ -197,5 +199,43 @@ public class SettingResourceAssembler {
                 result.label(),
                 result.value()
         );
+    }
+
+    /**
+     * 將設定查詢結果 DTO 轉換為側邊欄選單項目資源
+     *
+     * @param result 設定查詢結果 DTO
+     * @return 側邊欄選單項目資源
+     */
+    public TenantMenuItemGottenResource toMenuItemResource(SettingGottenResult result) {
+        if (result == null) {
+            return null;
+        }
+        return new TenantMenuItemGottenResource(
+                result.id(),
+                result.tenant(),
+                result.subCategory(),
+                result.code(),
+                result.name(),
+                result.description(),
+                result.value(),
+                result.priorityNo(),
+                result.activeFlag()
+        );
+    }
+
+    /**
+     * 將排序請求資源清單轉換為排序指令清單
+     *
+     * @param resources 排序請求資源清單
+     * @return 排序指令清單
+     */
+    public List<ReorderSettingItemCommand> toReorderCommands(List<ReorderSettingItemResource> resources) {
+        if (resources == null) {
+            return List.of();
+        }
+        return resources.stream()
+                .map(r -> new ReorderSettingItemCommand(r.id(), r.priorityNo()))
+                .toList();
     }
 }

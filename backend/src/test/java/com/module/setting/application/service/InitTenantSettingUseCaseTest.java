@@ -26,7 +26,7 @@ class InitTenantSettingUseCaseTest {
     /**
      * Feature: 租戶預設設定初始化功能
      * Scenario: 當業務設定範本為純淨狀態（不注入預設假資料）時，初始化回傳 0 筆新增
-     *   Given 指定租戶 "ALL"
+     *   Given 指定租戶 "CW"
      *   When 呼叫 InitTenantSettingUseCase 的 initDefaultSettings 方法
      *   Then 依據空範本執行，回傳 0 筆新增且不呼叫 save
      */
@@ -34,7 +34,7 @@ class InitTenantSettingUseCaseTest {
     @DisplayName("空種子範本時成功初始化且不寫入任何假資料")
     void shouldInitializeZeroSettingsWhenSeedTemplateIsEmpty() {
         // When
-        int createdCount = settingApplicationService.initDefaultSettings("ALL");
+        int createdCount = settingApplicationService.initDefaultSettings("CW");
 
         // Then
         assertEquals(0, createdCount);

@@ -40,7 +40,7 @@ public class SettingCategory {
     private Long id;
 
     /**
-     * 租戶識別碼 (ALL 代表全域共用)
+     * 租戶識別碼
      */
     @Column(name = "tenant", nullable = false, length = 64)
     private String tenant;
@@ -86,7 +86,7 @@ public class SettingCategory {
 
     public static SettingCategory of(String tenant, String code, String name, String description, Integer priorityNo) {
         SettingCategory category = new SettingCategory();
-        category.tenant = (tenant != null && !tenant.isBlank()) ? tenant.trim() : "ALL";
+        category.tenant = (tenant != null && !tenant.isBlank()) ? tenant.trim() : "CW";
         category.code = code != null ? code.trim() : "";
         category.name = name != null ? name.trim() : "";
         category.description = description;

@@ -1,3 +1,7 @@
+<!-- 頂部 Toast 與確認框 (全域通知) -->
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
 <header class="enterprise-header">
   <div class="header-left">
     <button
@@ -37,6 +41,66 @@
       ></p-dropdown>
     </div>
 
+    <!-- 系統語系切換器 (Globe 地球圖示) -->
+    <div class="locale-selector-container">
+      <button
+        class="locale-btn"
+        (click)="openLocaleDropdown(localeOp, $event)"
+        pTooltip="切換系統語系或維護租戶語系"
+        tooltipPosition="bottom"
+      >
+        <i class="pi pi-globe globe-icon"></i>
+        <span class="current-locale-text">{{ currentLocaleName }}</span>
+        <i class="pi pi-chevron-down arrow-icon"></i>
+      </button>
+
+      <!-- 語系下拉選單 Popover (開啟時主動呼叫 API 刷新語系列表) -->
+      <p-overlayPanel #localeOp (onShow)="loadTenantLocales()" [showCloseIcon]="false" styleClass="locale-overlay-panel">
+        <div class="locale-popover-content">
+          <div class="popover-header">
+            <span class="title">
+              <i class="pi pi-globe"></i> 系統語系
+            </span>
+            <span class="tenant-badge">{{ currentTenant }} 租戶</span>
+          </div>
+
+          <div class="locale-list">
+            <div
+              *ngFor="let loc of tenantLocales"
+              class="locale-item"
+              [class.active]="loc.code.toLowerCase() === currentLocaleCode.toLowerCase()"
+              (click)="selectLocale(loc, localeOp)"
+            >
+              <div class="locale-left">
+                <i
+                  class="pi"
+                  [ngClass]="loc.code.toLowerCase() === currentLocaleCode.toLowerCase() ? 'pi-check-circle check-active' : 'pi-circle'"
+                ></i>
+                <span class="locale-name">{{ loc.name }}</span>
+                <span class="locale-code">({{ loc.code }})</span>
+              </div>
+              <span *ngIf="loc.isDefault" class="default-badge">預設</span>
+            </div>
+
+            <div *ngIf="tenantLocales.length === 0" class="empty-locales">
+              尚未配置任何啟用語系
+            </div>
+          </div>
+
+          <div class="popover-footer">
+            <button
+              pButton
+              type="button"
+              label="維護租戶語系"
+              icon="pi pi-cog"
+              class="p-button-text p-button-sm w-full manage-locale-btn"
+              (click)="openLocaleManageDialog(); localeOp.hide()"
+            ></button>
+          </div>
+        </div>
+      </p-overlayPanel>
+    </div>
+
     <div class="divider-vertical"></div>
 
     <!-- 系統通知 -->
@@ -55,3 +119,237 @@
     </div>
   </div>
 </header>
+
+<!-- 租戶語系維護對話框 (Dialog) -->
+<p-dialog
+  [(visible)]="localeManageVisible"
+  [header]="'維護租戶支援語系 (Tenant: ' + currentTenant + ')'"
+  [modal]="true"
+  [breakpoints]="{ '960px': '85vw', '640px': '95vw' }"
+  [style]="{ width: '750px', maxWidth: '95vw' }"
+  styleClass="enterprise-dialog locale-dialog"
+>
+  <div class="dialog-content">
+    <!-- 提示摘要資訊 -->
+    <div class="locale-dialog-desc">
+      <i class="pi pi-info-circle"></i>
+      <span>
+        基於 <strong>Function Configurable</strong> 架構，本功能直接管理 <code>category=LOCALE</code> 且歸屬於 <strong>{{ currentTenant }}</strong> 租戶之語系項目，
+        切換為預設語系將在使用者首次登入時自動套用。
+      </span>
+    </div>
+
+    <!-- 既有語系列表表格 -->
+    <div class="locale-table-section mb-4">
+      <div class="section-title-bar mb-2 flex justify-content-between align-items-center">
+        <h4 class="m-0 font-semibold text-slate-800 text-sm">
+          <i class="pi pi-list"></i> 已登記之租戶語系
+        </h4>
+        <span class="text-xs text-slate-500">共 {{ allTenantLocales.length }} 筆語系配置</span>
+      </div>
+
+      <p-table
+        [value]="allTenantLocales"
+        [loading]="loadingLocales"
+        responsiveLayout="scroll"
+        styleClass="p-datatable-sm enterprise-datatable"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 110px">語系代碼</th>
+            <th>顯示名稱</th>
+            <th>說明備註</th>
+            <th style="width: 80px; text-align: center">預設</th>
+            <th style="width: 70px; text-align: center">排序</th>
+            <th style="width: 80px; text-align: center">狀態</th>
+            <th style="width: 100px; text-align: center">操作</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-loc>
+          <tr>
+            <td>
+              <span class="code-font">{{ loc.code }}</span>
+            </td>
+            <td>
+              <strong>{{ loc.name }}</strong>
+            </td>
+            <td>
+              <span class="text-secondary text-xs">{{ loc.description || '-' }}</span>
+            </td>
+            <td style="text-align: center">
+              <span *ngIf="loc.isDefault" class="default-chip">預設</span>
+              <button
+                *ngIf="!loc.isDefault"
+                pButton
+                label="設為預設"
+                class="p-button-text p-button-xs p-button-secondary text-xs p-0"
+                (click)="setDefaultLocale(loc)"
+              ></button>
+            </td>
+            <td style="text-align: center">{{ loc.priorityNo }}</td>
+            <td style="text-align: center">
+              <span class="status-badge" [class.active]="loc.activeFlag === 'Y'">
+                {{ loc.activeFlag === 'Y' ? '有效' : '停用' }}
+              </span>
+            </td>
+            <td style="text-align: center">
+              <div class="row-actions flex justify-content-center gap-1">
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm p-button-secondary action-btn"
+                  pTooltip="編輯語系"
+                  (click)="editLocale(loc)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger action-btn"
+                  [pTooltip]="loc.isDefault ? '預設語系不可刪除' : (loc.code.toLowerCase() === currentLocaleCode.toLowerCase() ? '當前使用中語系不可刪除' : '刪除語系')"
+                  [disabled]="loc.isDefault || loc.code.toLowerCase() === currentLocaleCode.toLowerCase()"
+                  (click)="confirmDeleteLocale(loc)"
+                ></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center p-3 text-secondary text-sm">
+              當前租戶尚未配置語系，請由下方表單新增支援語系。
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- 新增 / 編輯語系表單 -->
+    <div class="locale-form-card">
+      <div class="card-header-bar flex justify-content-between align-items-center mb-3">
+        <h4 class="m-0 font-semibold text-slate-800 text-sm">
+          <i class="pi" [ngClass]="isEditing ? 'pi-pencil' : 'pi-plus-circle'"></i>
+          {{ isEditing ? '編輯指定語系配置' : '新增租戶支援語系' }}
+        </h4>
+        <div *ngIf="!isEditing" class="preset-picker flex align-items-center gap-2">
+          <span class="text-xs text-slate-500">常用範本：</span>
+          <p-dropdown
+            [options]="presetLocales"
+            [(ngModel)]="selectedPreset"
+            optionLabel="label"
+            placeholder="快速帶入常用語系..."
+            (onChange)="onPresetSelect($event.value)"
+            [appendTo]="'body'"
+            styleClass="enterprise-input text-xs"
+          ></p-dropdown>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="required-label text-xs font-medium text-slate-700">語系唯一代碼 (Code)</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="formCode"
+            [disabled]="isEditing"
+            placeholder="例如: zh-TW, en-US"
+            class="enterprise-input w-full"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="required-label text-xs font-medium text-slate-700">顯示名稱 (Name)</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="formName"
+            placeholder="例如: 繁體中文, English"
+            class="enterprise-input w-full"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="text-xs font-medium text-slate-700">詳細說明 (Description)</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="formDesc"
+            placeholder="例如: 繁體中文 (台灣)"
+            class="enterprise-input w-full"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="text-xs font-medium text-slate-700">顯示排序號 (Priority No)</label>
+          <p-inputNumber
+            [(ngModel)]="formPriorityNo"
+            [min]="1"
+            [max]="999"
+            styleClass="w-full"
+            inputStyleClass="enterprise-input w-full"
+          ></p-inputNumber>
+        </div>
+
+        <div class="form-field checkbox-field flex align-items-center gap-2 mt-2">
+          <p-checkbox
+            [(ngModel)]="formIsDefault"
+            [binary]="true"
+            inputId="defaultLocaleCheck"
+          ></p-checkbox>
+          <label for="defaultLocaleCheck" class="cursor-pointer text-xs font-medium text-slate-700">
+            設為該租戶預設語系 (Default)
+          </label>
+        </div>
+
+        <div class="form-field" *ngIf="isEditing">
+          <label class="text-xs font-medium text-slate-700">有效性狀態</label>
+          <p-dropdown
+            [options]="[
+              { label: '有效 (Y)', value: 'Y' },
+              { label: '停用 (N)', value: 'N' }
+            ]"
+            [(ngModel)]="formActiveFlag"
+            optionLabel="label"
+            optionValue="value"
+            [disabled]="formIsDefault || formCode.toLowerCase() === currentLocaleCode.toLowerCase()"
+            [appendTo]="'body'"
+            styleClass="enterprise-input w-full"
+          ></p-dropdown>
+          <small *ngIf="formIsDefault" class="text-xs text-amber-600 mt-1 flex align-items-center gap-1">
+            <i class="pi pi-lock text-xs"></i> 預設語系必須保持有效，禁止停用
+          </small>
+          <small *ngIf="!formIsDefault && formCode.toLowerCase() === currentLocaleCode.toLowerCase()" class="text-xs text-amber-600 mt-1 flex align-items-center gap-1">
+            <i class="pi pi-lock text-xs"></i> 當前使用中語系禁止停用
+          </small>
+        </div>
+      </div>
+
+      <div class="form-actions mt-3 flex justify-content-end gap-2">
+        <button
+          pButton
+          *ngIf="isEditing"
+          label="取消編輯"
+          icon="pi pi-times"
+          class="p-button-text p-button-secondary p-button-sm"
+          (click)="resetLocaleForm()"
+        ></button>
+        <button
+          pButton
+          [label]="isEditing ? '更新語系' : '建立語系'"
+          icon="pi pi-check"
+          class="p-button-primary p-button-sm"
+          (click)="saveLocale()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="完成關閉"
+      class="p-button-outlined p-button-secondary p-button-sm"
+      (click)="localeManageVisible = false"
+    ></button>
+  </ng-template>
+</p-dialog>

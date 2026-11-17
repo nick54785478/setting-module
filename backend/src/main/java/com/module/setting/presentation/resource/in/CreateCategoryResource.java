@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "建立維度元資料請求資源")
 public record CreateCategoryResource(
-        @Schema(description = "所屬租戶 (留空預設為 ALL)", example = "ALL")
+        @Schema(description = "所屬租戶 (留空預設為當前租戶)", example = "CW")
         String tenant,
 
         @NotBlank(message = "維度代碼不得為空")
