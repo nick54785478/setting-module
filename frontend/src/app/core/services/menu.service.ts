@@ -155,6 +155,19 @@ export class MenuService {
         }
       }
 
+      // 自動補齊已知選單之對應 view，確保即使 DB 舊資料尚未配置 view 也能正確跳轉至該功能
+      if (!view) {
+        if (item.code === 'MENU_TENANT') {
+          view = 'tenant-profile';
+        } else if (item.code === 'MENU_DESIGNER') {
+          view = 'dynamic-designer';
+        } else if (item.code === 'MENU_SETTING') {
+          view = 'setting';
+        } else if (item.code === 'MENU_CATEGORY') {
+          view = 'category';
+        }
+      }
+
       const menuItem: MenuItem = {
         id: item.id,
         code: item.code,

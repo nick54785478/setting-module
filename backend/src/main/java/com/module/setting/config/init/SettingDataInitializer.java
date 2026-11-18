@@ -170,8 +170,23 @@ public class SettingDataInitializer implements ApplicationRunner {
         );
 
         for (Setting s : menus) {
-            if (!settingJpaRepository.existsByScopeTenantAndScopeCategoryAndScopeCode(
-                    s.getScope().getTenant(), s.getScope().getCategory(), s.getScope().getCode())) {
+            var existingOpt = settingJpaRepository.findByScopeTenantAndScopeCodeAndActiveFlag(
+                    s.getScope().getTenant(), s.getScope().getCode(), com.module.setting.application.shared.vo.YesNo.Y);
+            if (existingOpt.isPresent()) {
+                Setting existing = existingOpt.get();
+                if (existing.getValue() == null || !existing.getValue().contains("\"view\"")) {
+                    existing.update(
+                            existing.getScope(),
+                            existing.getProfile(),
+                            s.getValue(),
+                            existing.getPriorityNo(),
+                            existing.getActiveFlag().name()
+                    );
+                    settingJpaRepository.save(existing);
+                    log.info("[SettingModule] Updated Menu Item: {} ({}) with view configuration",
+                            s.getProfile().getName(), s.getScope().getCode());
+                }
+            } else {
                 settingJpaRepository.save(s);
                 log.info("[SettingModule] Initialized Menu Item: {} ({}) for tenant '{}'",
                         s.getProfile().getName(), s.getScope().getCode(), s.getScope().getTenant());

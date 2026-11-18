@@ -75,7 +75,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.menuGroups.forEach((g) => {
       g.items.forEach((i) => {
         if (i.view) {
-          i.active = i.view === view;
+          i.active = i.view === view || ((view === 'dynamic-page' || view === 'tenant-profile') && (i.view === 'tenant-profile' || i.view === 'dynamic-page'));
+        } else if (i.code === 'MENU_TENANT' && (view === 'tenant-profile' || view === 'dynamic-page')) {
+          i.active = true;
         } else {
           i.active = false;
         }
@@ -97,6 +99,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     if (item.view) {
       this.navigationService.setView(item.view);
+    } else if (item.code === 'MENU_TENANT') {
+      this.navigationService.setView('tenant-profile');
+    } else if (item.code === 'MENU_DESIGNER') {
+      this.navigationService.setView('dynamic-designer');
+    } else if (item.code === 'MENU_SETTING') {
+      this.navigationService.setView('setting');
+    } else if (item.code === 'MENU_CATEGORY') {
+      this.navigationService.setView('category');
     } else {
       this.menuGroups.forEach((g) => g.items.forEach((i) => (i.active = false)));
       item.active = true;
