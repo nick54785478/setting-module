@@ -57,7 +57,19 @@ import { FormField, FormFieldOption } from '../../models/form-field.model';
 })
 export class DynamicDesignerComponent implements OnInit, OnDestroy {
   public currentTenant: string = 'CW';
-  public readonly pageCode: string = 'TENANT_PROFILE';
+  public selectedPageCode: string = 'TENANT_PROFILE';
+
+  // 可維護之自訂動態頁面清單
+  public availablePages = [
+    { label: '租戶畫像自訂表單 (TENANT_PROFILE)', value: 'TENANT_PROFILE' },
+    { label: '新進人員到職表單 (USER_ONBOARDING)', value: 'USER_ONBOARDING' },
+    { label: '系統巡檢維護日誌 (SYSTEM_INSPECTION)', value: 'SYSTEM_INSPECTION' }
+  ];
+
+  // 新增頁面對話框狀態
+  public newPageDialogVisible: boolean = false;
+  public newPageCodeInput: string = '';
+  public newPageNameInput: string = '';
 
   public fields: FormField[] = [];
   public loading: boolean = false;
@@ -130,7 +142,7 @@ export class DynamicDesignerComponent implements OnInit, OnDestroy {
    */
   public loadSchema(): void {
     this.loading = true;
-    this.dynamicPageService.getPageSchema(this.pageCode, this.currentTenant).subscribe({
+    this.dynamicPageService.getPageSchema(this.selectedPageCode, this.currentTenant).subscribe({
       next: (schema) => {
         this.fields = JSON.parse(JSON.stringify(schema));
         this.loading = false;
@@ -145,17 +157,64 @@ export class DynamicDesignerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * 依據選取的頁面代碼向後端查出最新 Schema
+   */
+  public querySchema(): void {
+    this.loadSchema();
+    this.messageService.add({
+      severity: 'info',
+      summary: '已查出頁面架構',
+      detail: `已載入「${this.selectedPageCode}」之欄位定義清單`
+    });
+  }
+
+  /**
+   * 開啟新增頁面對話框
+   */
+  public openNewPageDialog(): void {
+    this.newPageCodeInput = '';
+    this.newPageNameInput = '';
+    this.newPageDialogVisible = true;
+  }
+
+  /**
+   * 確認建立新頁面 Schema
+   */
+  public confirmCreateNewPage(): void {
+    if (!this.newPageCodeInput || !this.newPageNameInput) {
+      this.messageService.add({ severity: 'warn', summary: '請填寫完整資訊', detail: '頁面代碼與頁面名稱皆為必填！' });
+      return;
+    }
+    const code = this.newPageCodeInput.trim().toUpperCase();
+    const name = this.newPageNameInput.trim();
+
+    const exists = this.availablePages.some((p) => p.value === code);
+    if (!exists) {
+      this.availablePages.push({ label: `${name} (${code})`, value: code });
+    }
+    this.selectedPageCode = code;
+    this.fields = [];
+    this.newPageDialogVisible = false;
+    this.messageService.add({
+      severity: 'success',
+      summary: '已建立新頁面結構',
+      detail: `請開始為「${name}」新增自訂欄位，完成後點擊儲存。`
+    });
+    this.cdr.markForCheck();
+  }
+
+  /**
    * 儲存設計完成之 Schema 到後端
    */
   public saveSchema(): void {
     this.saving = true;
-    this.dynamicPageService.savePageSchema(this.pageCode, this.fields, this.currentTenant).subscribe({
+    this.dynamicPageService.savePageSchema(this.selectedPageCode, this.fields, this.currentTenant).subscribe({
       next: () => {
         this.saving = false;
         this.messageService.add({
           severity: 'success',
           summary: '儲存成功',
-          detail: `租戶 [${this.currentTenant}] 專屬表單設計 Schema 已成功更新保存！`
+          detail: `租戶 [${this.currentTenant}] 專屬頁面 [${this.selectedPageCode}] 之表單設計 Schema 已成功更新保存！`
         });
         this.cdr.markForCheck();
       },

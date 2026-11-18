@@ -12,7 +12,7 @@
           <i class="pi pi-shield mr-1"></i>當前租戶：{{ currentTenant }}
         </span>
         <span class="code-badge">
-          頁面識別：{{ pageCode }}
+          頁面識別：{{ selectedPageCode }}
         </span>
       </div>
 
@@ -55,6 +55,38 @@
     <p class="subtitle">
       在此自由自定義目前租戶專屬的動態頁面欄位、元件型態、驗證規則與順序。儲存後將同步生效於該租戶之動態填寫頁面。
     </p>
+
+    <!-- 頁面選擇與查詢工具列 -->
+    <div class="page-selector-bar mt-3 pt-3 border-top-1 surface-border flex align-items-center flex-wrap gap-2">
+      <label class="font-bold text-gray-700 text-sm mr-1">
+        <i class="pi pi-file-edit mr-1 text-primary"></i>選擇設計頁面：
+      </label>
+      <p-dropdown
+        [options]="availablePages"
+        [(ngModel)]="selectedPageCode"
+        (onChange)="querySchema()"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-22rem p-inputtext-sm"
+      ></p-dropdown>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-search"
+        label="查出架構"
+        class="p-button-sm p-button-outlined"
+        [loading]="loading"
+        (click)="querySchema()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-plus-circle"
+        label="新增自訂頁面"
+        class="p-button-sm p-button-text"
+        (click)="openNewPageDialog()"
+      ></button>
+    </div>
   </div>
 
   <!-- 欄位設計清單 Table 卡片 -->
@@ -373,6 +405,58 @@
       icon="pi pi-check"
       class="p-button-primary"
       (click)="saveFieldDialog()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- 新增頁面結構對話框 -->
+<p-dialog
+  [(visible)]="newPageDialogVisible"
+  header="新增自訂動態頁面結構"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="p-fluid py-2">
+    <div class="field mb-3">
+      <label class="font-bold text-sm text-gray-700">頁面英文代碼 (Page Code) <span class="text-red-500">*</span></label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="newPageCodeInput"
+        placeholder="例如: ORDER_INSPECTION, VIP_FEEDBACK"
+        class="w-full mt-1"
+      />
+      <small class="text-gray-500">此代碼將作為 Schema 與資料隔離存取的識別鍵</small>
+    </div>
+    <div class="field mb-2">
+      <label class="font-bold text-sm text-gray-700">頁面顯示名稱 <span class="text-red-500">*</span></label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="newPageNameInput"
+        placeholder="例如: 訂單檢驗報表, VIP 客戶反饋單"
+        class="w-full mt-1"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="取消"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="newPageDialogVisible = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="建立頁面"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="confirmCreateNewPage()"
     ></button>
   </ng-template>
 </p-dialog>

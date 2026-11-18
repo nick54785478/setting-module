@@ -174,10 +174,17 @@ public class SettingDataInitializer implements ApplicationRunner {
                     s.getScope().getTenant(), s.getScope().getCode(), com.module.setting.application.shared.vo.YesNo.Y);
             if (existingOpt.isPresent()) {
                 Setting existing = existingOpt.get();
+                boolean needUpdate = false;
                 if (existing.getValue() == null || !existing.getValue().contains("\"view\"")) {
+                    needUpdate = true;
+                }
+                if ("MENU_TENANT".equals(s.getScope().getCode()) && "租戶隔離中心".equals(existing.getProfile().getName())) {
+                    needUpdate = true;
+                }
+                if (needUpdate) {
                     existing.update(
                             existing.getScope(),
-                            existing.getProfile(),
+                            s.getProfile(),
                             s.getValue(),
                             existing.getPriorityNo(),
                             existing.getActiveFlag().name()

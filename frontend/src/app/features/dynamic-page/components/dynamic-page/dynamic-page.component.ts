@@ -76,7 +76,7 @@ export class DynamicPageComponent implements OnInit, OnDestroy {
     private navigationService: NavigationService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.currentTenant = this.tenantService.getCurrentTenant();
@@ -117,7 +117,7 @@ export class DynamicPageComponent implements OnInit, OnDestroy {
               // 若該租戶尚無資料，提供租戶預設識別填入
               this.formGroup.patchValue({
                 tenantCode: this.currentTenant,
-                tenantName: this.currentTenant === 'CW' ? '國泰世華核心租戶' : `客製租戶 (${this.currentTenant})`
+                tenantName: this.currentTenant === 'CW' ? 'CW' : `客製租戶 (${this.currentTenant})`
               });
             }
             this.loading = false;

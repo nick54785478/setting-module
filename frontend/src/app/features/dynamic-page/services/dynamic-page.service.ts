@@ -194,6 +194,53 @@ export class DynamicPageService {
   }
 
   /**
+   * 取得指定租戶之動態頁面填寫資料清單 (支援多筆資料查詢)
+   *
+   * @param pageCode 頁面識別代碼
+   * @param tenant 租戶代碼
+   */
+  public getPageRecords(pageCode: string, tenant?: string): Observable<any[]> {
+    return this.getPageData(pageCode, tenant).pipe(
+      map((res) => {
+        if (Array.isArray(res)) {
+          return res;
+        }
+        if (res && Array.isArray(res.records)) {
+          return res.records;
+        }
+        if (res && Object.keys(res).length > 0) {
+          return [res];
+        }
+        // 預設基準資料
+        const currentTenant = tenant || 'CW';
+        return [
+          {
+            tenantCode: currentTenant,
+            tenantName: currentTenant === 'CW' ? '國泰世華銀行總行' : `客製租戶空間 (${currentTenant})`,
+            contactEmail: 'admin@cw.com',
+            maxUsers: 500,
+            tier: 'ENTERPRISE',
+            contractExpiry: '2027-12-31',
+            dataRegion: 'TW-TPE-1',
+            remarks: '核心商業租戶，支援高可用性與多可用區數據隔離。'
+          }
+        ];
+      })
+    );
+  }
+
+  /**
+   * 儲存指定租戶之動態頁面填寫資料清單
+   *
+   * @param pageCode 頁面識別代碼
+   * @param records 資料紀錄陣列
+   * @param tenant 租戶代碼
+   */
+  public savePageRecords(pageCode: string, records: any[], tenant?: string): Observable<DynamicPageSettingResource> {
+    return this.savePageData(pageCode, records, tenant);
+  }
+
+  /**
    * AutoComplete 本地/遠端建議資料查詢
    *
    * @param query 使用者輸入查詢字串
