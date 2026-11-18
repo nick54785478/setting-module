@@ -363,10 +363,10 @@ export class DynamicDesignerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 跳轉前往「租戶動態表單填寫」頁面預覽測試
+   * 跳轉前往「租戶畫像資料」頁面預覽測試
    */
   public goToFormRunner(): void {
-    this.navigationService.setView('dynamic-page');
+    this.navigationService.setView('tenant-profile');
   }
 
   /**

@@ -6,6 +6,7 @@ import { SettingManagementComponent } from './features/setting/components/settin
 import { CategoryManagementComponent } from './features/category/components/category-management/category-management.component';
 import { DynamicPageComponent } from './features/dynamic-page/components/dynamic-page/dynamic-page.component';
 import { DynamicDesignerComponent } from './features/dynamic-page/components/dynamic-designer/dynamic-designer.component';
+import { TenantProfileComponent } from './features/tenant-profile/components/tenant-profile/tenant-profile.component';
 import { NavigationService, ActiveView } from './core/services/navigation.service';
 
 /**
@@ -25,7 +26,8 @@ import { NavigationService, ActiveView } from './core/services/navigation.servic
     SettingManagementComponent,
     CategoryManagementComponent,
     DynamicPageComponent,
-    DynamicDesignerComponent
+    DynamicDesignerComponent,
+    TenantProfileComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

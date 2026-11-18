@@ -144,8 +144,8 @@ public class SettingDataInitializer implements ApplicationRunner {
                 ),
                 Setting.create(
                         SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_TENANT"),
-                        SettingProfile.of("租戶動態表單", "多租戶動態頁面自訂表單填寫與配置"),
-                        "{\"icon\":\"pi pi-building\",\"view\":\"dynamic-page\"}",
+                        SettingProfile.of("租戶畫像資料", "多租戶專屬自訂畫像資料與動態表單配置"),
+                        "{\"icon\":\"pi pi-building\",\"view\":\"tenant-profile\"}",
                         4
                 ),
                 // 系統與安全維運群組

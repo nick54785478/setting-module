@@ -66,7 +66,7 @@ export class MenuService {
         { label: '功能設定管理', icon: 'pi pi-sliders-h', active: true, badge: '核心', view: 'setting' as ActiveView, priorityNo: 1 },
         { label: '元資料字典', icon: 'pi pi-database', active: false, badge: '元資料', view: 'category' as ActiveView, priorityNo: 2 },
         { label: '動態表單設計', icon: 'pi pi-pencil', active: false, badge: '設計', view: 'dynamic-designer' as ActiveView, priorityNo: 3 },
-        { label: '租戶動態表單', icon: 'pi pi-building', active: false, view: 'dynamic-page' as ActiveView, priorityNo: 4 }
+        { label: '租戶畫像資料', icon: 'pi pi-building', active: false, view: 'tenant-profile' as ActiveView, priorityNo: 4 }
       ]
     },
     {

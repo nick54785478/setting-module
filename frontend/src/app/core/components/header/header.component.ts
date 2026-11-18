@@ -105,8 +105,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.currentViewLabel = '元資料字典';
       } else if (view === 'dynamic-designer') {
         this.currentViewLabel = '動態表單設計';
-      } else if (view === 'dynamic-page') {
-        this.currentViewLabel = '租戶動態表單';
+      } else if (view === 'tenant-profile' || view === 'dynamic-page') {
+        this.currentViewLabel = '租戶畫像資料 (TENANT_PROFILE)';
       } else {
         this.currentViewLabel = '功能設定管理';
       }
