@@ -25,13 +25,10 @@ export class DynamicPageService {
   constructor(private http: HttpClient) {}
 
   /**
-   * 取得指定動態頁面之表單欄位定義 (Schema)
-   *
-   * @param pageCode 頁面識別代碼 (預設 TENANT_PROFILE)
+   * 取得預設表單欄位範本 (涵蓋所有元件型態)
    */
-  public getPageSchema(pageCode: string = 'TENANT_PROFILE'): Observable<FormField[]> {
-    // 預設提供涵蓋所有表單元件類型的多租戶自訂擴充表單欄位 Schema
-    const defaultSchema: FormField[] = [
+  public getDefaultSchema(): FormField[] {
+    return [
       {
         name: 'tenantName',
         type: 'text',
@@ -98,8 +95,56 @@ export class DynamicPageService {
         placeholder: '請輸入此租戶額外自訂要求或環境隔離備註...'
       }
     ];
+  }
 
-    return of(defaultSchema);
+  /**
+   * 取得指定租戶之動態頁面欄位定義 (Schema)
+   *
+   * @param pageCode 頁面識別代碼 (預設 TENANT_PROFILE)
+   * @param tenant 租戶代碼
+   */
+  public getPageSchema(pageCode: string = 'TENANT_PROFILE', tenant?: string): Observable<FormField[]> {
+    let params = new HttpParams();
+    if (tenant) {
+      params = params.set('tenant', tenant);
+    }
+
+    return this.http.get<DynamicPageSettingResource>(`${this.baseUrl}/${pageCode}/schema`, { params }).pipe(
+      map((res) => {
+        if (!res || !res.value || res.value === '[]' || res.value === '{}') {
+          return this.getDefaultSchema();
+        }
+        try {
+          const parsed = JSON.parse(res.value);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+          return this.getDefaultSchema();
+        } catch {
+          return this.getDefaultSchema();
+        }
+      })
+    );
+  }
+
+  /**
+   * 儲存指定租戶之動態頁面欄位定義 (Schema)
+   *
+   * @param pageCode 頁面識別代碼
+   * @param fields 欄位結構定義陣列
+   * @param tenant 租戶代碼
+   */
+  public savePageSchema(pageCode: string, fields: FormField[], tenant?: string): Observable<DynamicPageSettingResource> {
+    let params = new HttpParams();
+    if (tenant) {
+      params = params.set('tenant', tenant);
+    }
+
+    const payload = JSON.stringify(fields, null, 2);
+    return this.http.put<DynamicPageSettingResource>(`${this.baseUrl}/${pageCode}/schema`, payload, {
+      params,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   /**

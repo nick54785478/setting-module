@@ -18,6 +18,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 
 import { TenantService } from '../../../../core/services/tenant.service';
+import { NavigationService } from '../../../../core/services/navigation.service';
 import { DynamicPageService } from '../../services/dynamic-page.service';
 import { FormField, FormFieldOption } from '../../models/form-field.model';
 
@@ -72,6 +73,7 @@ export class DynamicPageComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private dynamicPageService: DynamicPageService,
     private tenantService: TenantService,
+    private navigationService: NavigationService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -100,7 +102,7 @@ export class DynamicPageComponent implements OnInit, OnDestroy {
     this.submitted = false;
 
     // 1. 取得欄位 Schema 定義
-    this.dynamicPageService.getPageSchema(this.pageCode).subscribe({
+    this.dynamicPageService.getPageSchema(this.pageCode, this.currentTenant).subscribe({
       next: (fields) => {
         this.formFields = fields;
         this.buildFormControls(fields);
@@ -232,6 +234,13 @@ export class DynamicPageComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  /**
+   * 前往表單設計器自訂欄位
+   */
+  public goToDesigner(): void {
+    this.navigationService.setView('dynamic-designer');
   }
 
   /**

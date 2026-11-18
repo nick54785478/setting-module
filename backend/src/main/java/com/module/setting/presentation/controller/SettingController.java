@@ -559,4 +559,123 @@ public class SettingController {
             ));
         }
     }
+
+    /**
+     * 取得指定租戶之動態頁面欄位定義 Schema
+     *
+     * @param pageCode 頁面代碼 (例如: TENANT_PROFILE)
+     * @param tenant   租戶代碼 (可選)
+     * @return 動態頁面 Schema 設定資料
+     */
+    @Operation(summary = "取得指定租戶之動態頁面欄位定義 Schema", description = "依據租戶代碼與頁面代碼檢索表單設計 Schema (JSON 字串)")
+    @ApiResponse(responseCode = "200", description = "檢索成功")
+    @GetMapping("/pages/{pageCode}/schema")
+    public ResponseEntity<SettingGottenResource> getPageSchema(
+            @PathVariable String pageCode,
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
+            @RequestParam(required = false) String tenant) {
+        String resolvedTenant = (tenant != null && !tenant.isBlank())
+                ? tenant
+                : UserContextHolder.getTenant();
+        if (resolvedTenant == null || resolvedTenant.isBlank()) {
+            resolvedTenant = "CW";
+        }
+
+        String schemaCode = pageCode + "_SCHEMA";
+        try {
+            SettingGottenResult result = getSettingUseCase.getByScope(resolvedTenant, schemaCode);
+            return ResponseEntity.ok(settingResourceAssembler.toGottenResource(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok(new SettingGottenResource(
+                    null,
+                    resolvedTenant,
+                    "DYNAMIC_PAGE",
+                    "PAGE_SCHEMA",
+                    schemaCode,
+                    pageCode + " Schema",
+                    "Dynamic Page Form Schema for " + pageCode,
+                    "[]",
+                    1,
+                    "Y"
+            ));
+        }
+    }
+
+    /**
+     * 儲存或更新指定租戶之動態頁面欄位定義 Schema
+     *
+     * @param pageCode   頁面代碼 (例如: TENANT_PROFILE)
+     * @param tenant     租戶代碼 (可選)
+     * @param schemaJson 動態表單 Schema JSON 資料
+     * @return 儲存後之 Schema 設定資料
+     */
+    @Operation(summary = "儲存或更新指定租戶之動態頁面欄位定義 Schema", description = "儲存各租戶自定義之表單設計結構 Schema (JSON 字串)")
+    @ApiResponse(responseCode = "200", description = "儲存成功")
+    @PutMapping("/pages/{pageCode}/schema")
+    public ResponseEntity<SettingGottenResource> savePageSchema(
+            @PathVariable String pageCode,
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
+            @RequestParam(required = false) String tenant,
+            @RequestBody(required = false) String schemaJson) {
+        String resolvedTenant = (tenant != null && !tenant.isBlank())
+                ? tenant
+                : UserContextHolder.getTenant();
+        if (resolvedTenant == null || resolvedTenant.isBlank()) {
+            resolvedTenant = "CW";
+        }
+
+        String schemaCode = pageCode + "_SCHEMA";
+        String contentJson = (schemaJson != null && !schemaJson.isBlank()) ? schemaJson : "[]";
+
+        try {
+            SettingGottenResult existing = getSettingUseCase.getByScope(resolvedTenant, schemaCode);
+            var updateCommand = new UpdateSettingCommand(
+                    existing.id(),
+                    existing.category(),
+                    existing.subCategory(),
+                    existing.name(),
+                    existing.description(),
+                    contentJson,
+                    existing.priorityNo(),
+                    "Y"
+            );
+            var updated = updateSettingUseCase.update(updateCommand);
+            return ResponseEntity.ok(new SettingGottenResource(
+                    updated.id(),
+                    updated.tenant(),
+                    updated.category(),
+                    updated.subCategory(),
+                    updated.code(),
+                    updated.name(),
+                    updated.description(),
+                    updated.value(),
+                    updated.priorityNo(),
+                    updated.activeFlag()
+            ));
+        } catch (IllegalArgumentException e) {
+            var createCommand = new CreateSettingCommand(
+                    resolvedTenant,
+                    "DYNAMIC_PAGE",
+                    "PAGE_SCHEMA",
+                    schemaCode,
+                    pageCode + " Schema",
+                    "Dynamic Page Form Schema for " + pageCode,
+                    contentJson,
+                    1
+            );
+            var created = createSettingUseCase.create(createCommand);
+            return ResponseEntity.ok(new SettingGottenResource(
+                    created.id(),
+                    created.tenant(),
+                    created.category(),
+                    created.subCategory(),
+                    created.code(),
+                    created.name(),
+                    created.description(),
+                    created.value(),
+                    created.priorityNo(),
+                    created.activeFlag()
+            ));
+        }
+    }
 }

@@ -103,8 +103,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.navSub = this.navigationService.currentView$.subscribe((view: ActiveView) => {
       if (view === 'category') {
         this.currentViewLabel = '元資料字典';
+      } else if (view === 'dynamic-designer') {
+        this.currentViewLabel = '動態表單設計';
       } else if (view === 'dynamic-page') {
-        this.currentViewLabel = '租戶隔離中心';
+        this.currentViewLabel = '租戶動態表單';
       } else {
         this.currentViewLabel = '功能設定管理';
       }

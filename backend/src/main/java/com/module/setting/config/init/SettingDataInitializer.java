@@ -137,10 +137,16 @@ public class SettingDataInitializer implements ApplicationRunner {
                         2
                 ),
                 Setting.create(
-                        SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_TENANT"),
-                        SettingProfile.of("租戶隔離中心", "多租戶獨立數據空間與隔離策略配置"),
-                        "{\"icon\":\"pi pi-building\",\"view\":\"dynamic-page\"}",
+                        SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_DESIGNER"),
+                        SettingProfile.of("動態表單設計", "視覺化自訂租戶動態表單欄位與配置"),
+                        "{\"icon\":\"pi pi-pencil\",\"badge\":\"設計\",\"view\":\"dynamic-designer\"}",
                         3
+                ),
+                Setting.create(
+                        SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_TENANT"),
+                        SettingProfile.of("租戶動態表單", "多租戶動態頁面自訂表單填寫與配置"),
+                        "{\"icon\":\"pi pi-building\",\"view\":\"dynamic-page\"}",
+                        4
                 ),
                 // 系統與安全維運群組
                 Setting.create(

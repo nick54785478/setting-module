@@ -300,4 +300,88 @@ class SettingControllerLocaleTest {
         assertThat(response.getBody().code()).isEqualTo("NEW_PAGE");
         assertThat(response.getBody().value()).isEqualTo("{\"tier\":\"STANDARD\"}");
     }
+
+    @Test
+    @DisplayName("取得動態頁面 Schema - 存在時回傳設定")
+    void shouldGetPageSchema_whenExists() {
+        // Arrange
+        SettingGottenResult mockResult = new SettingGottenResult(
+                30L, "CW", "DYNAMIC_PAGE", "PAGE_SCHEMA", "TENANT_PROFILE_SCHEMA", "TENANT_PROFILE Schema", "desc", "[{\"name\":\"customField\"}]", 1, "Y"
+        );
+        SettingGottenResource mockResource = new SettingGottenResource(
+                30L, "CW", "DYNAMIC_PAGE", "PAGE_SCHEMA", "TENANT_PROFILE_SCHEMA", "TENANT_PROFILE Schema", "desc", "[{\"name\":\"customField\"}]", 1, "Y"
+        );
+        when(getSettingUseCase.getByScope("CW", "TENANT_PROFILE_SCHEMA")).thenReturn(mockResult);
+        when(settingResourceAssembler.toGottenResource(mockResult)).thenReturn(mockResource);
+
+        // Act
+        var response = settingController.getPageSchema("TENANT_PROFILE", "CW");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo("TENANT_PROFILE_SCHEMA");
+        assertThat(response.getBody().value()).isEqualTo("[{\"name\":\"customField\"}]");
+    }
+
+    @Test
+    @DisplayName("取得動態頁面 Schema - 尚無配置時回傳空陣列預設結構")
+    void shouldGetPageSchema_whenNotExists_returnsDefault() {
+        // Arrange
+        when(getSettingUseCase.getByScope("ACME", "TENANT_PROFILE_SCHEMA"))
+                .thenThrow(new IllegalArgumentException("Not found"));
+
+        // Act
+        var response = settingController.getPageSchema("TENANT_PROFILE", "ACME");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().tenant()).isEqualTo("ACME");
+        assertThat(response.getBody().code()).isEqualTo("TENANT_PROFILE_SCHEMA");
+        assertThat(response.getBody().value()).isEqualTo("[]");
+    }
+
+    @Test
+    @DisplayName("儲存動態頁面 Schema - 已存在時更新")
+    void shouldSavePageSchema_whenExists_updates() {
+        // Arrange
+        SettingGottenResult existing = new SettingGottenResult(
+                30L, "CW", "DYNAMIC_PAGE", "PAGE_SCHEMA", "TENANT_PROFILE_SCHEMA", "desc", "desc", "[]", 1, "Y"
+        );
+        SettingUpdatedResult updated = new SettingUpdatedResult(
+                30L, "CW", "DYNAMIC_PAGE", "PAGE_SCHEMA", "TENANT_PROFILE_SCHEMA", "desc", "desc", "[{\"name\":\"field1\"}]", 1, "Y"
+        );
+        when(getSettingUseCase.getByScope("CW", "TENANT_PROFILE_SCHEMA")).thenReturn(existing);
+        when(updateSettingUseCase.update(any())).thenReturn(updated);
+
+        // Act
+        var response = settingController.savePageSchema("TENANT_PROFILE", "CW", "[{\"name\":\"field1\"}]");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().value()).isEqualTo("[{\"name\":\"field1\"}]");
+    }
+
+    @Test
+    @DisplayName("儲存動態頁面 Schema - 不存在時新增")
+    void shouldSavePageSchema_whenNotExists_creates() {
+        // Arrange
+        when(getSettingUseCase.getByScope("CW", "NEW_SCHEMA_SCHEMA"))
+                .thenThrow(new IllegalArgumentException("Not found"));
+        var createdResult = new com.module.setting.application.shared.result.SettingCreatedResult(
+                35L, "CW", "DYNAMIC_PAGE", "PAGE_SCHEMA", "NEW_SCHEMA_SCHEMA", "desc", "desc", "[{\"name\":\"field2\"}]", 1, "Y"
+        );
+        when(createSettingUseCase.create(any())).thenReturn(createdResult);
+
+        // Act
+        var response = settingController.savePageSchema("NEW_SCHEMA", "CW", "[{\"name\":\"field2\"}]");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo("NEW_SCHEMA_SCHEMA");
+        assertThat(response.getBody().value()).isEqualTo("[{\"name\":\"field2\"}]");
+    }
 }

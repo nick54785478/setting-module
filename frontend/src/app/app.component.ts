@@ -5,6 +5,7 @@ import { LayoutComponent } from './core/components/layout/layout.component';
 import { SettingManagementComponent } from './features/setting/components/setting-management/setting-management.component';
 import { CategoryManagementComponent } from './features/category/components/category-management/category-management.component';
 import { DynamicPageComponent } from './features/dynamic-page/components/dynamic-page/dynamic-page.component';
+import { DynamicDesignerComponent } from './features/dynamic-page/components/dynamic-designer/dynamic-designer.component';
 import { NavigationService, ActiveView } from './core/services/navigation.service';
 
 /**
@@ -23,7 +24,8 @@ import { NavigationService, ActiveView } from './core/services/navigation.servic
     LayoutComponent,
     SettingManagementComponent,
     CategoryManagementComponent,
-    DynamicPageComponent
+    DynamicPageComponent,
+    DynamicDesignerComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

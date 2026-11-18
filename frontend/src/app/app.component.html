@@ -1,5 +1,6 @@
 <app-layout>
   <app-setting-management *ngIf="currentView === 'setting'"></app-setting-management>
   <app-category-management *ngIf="currentView === 'category'"></app-category-management>
+  <app-dynamic-designer *ngIf="currentView === 'dynamic-designer'"></app-dynamic-designer>
   <app-dynamic-page *ngIf="currentView === 'dynamic-page'"></app-dynamic-page>
 </app-layout>

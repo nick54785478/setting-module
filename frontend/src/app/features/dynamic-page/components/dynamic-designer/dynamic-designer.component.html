@@ -1,0 +1,378 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="designer-container">
+  <!-- 頁面頂部 Header 資訊區 -->
+  <div class="header-card">
+    <div class="header-title-row">
+      <div class="title-with-badge">
+        <i class="pi pi-pencil text-primary text-2xl mr-2"></i>
+        <h2>動態表單架構設計器 (Schema Designer)</h2>
+        <span class="tenant-badge">
+          <i class="pi pi-shield mr-1"></i>當前租戶：{{ currentTenant }}
+        </span>
+        <span class="code-badge">
+          頁面識別：{{ pageCode }}
+        </span>
+      </div>
+
+      <div class="header-actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-eye"
+          label="前往表單填寫"
+          class="p-button-outlined p-button-sm mr-2"
+          (click)="goToFormRunner()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-history"
+          label="載入官方範本"
+          class="p-button-outlined p-button-secondary p-button-sm mr-2"
+          (click)="resetToDefaultTemplate()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="新增自訂欄位"
+          class="p-button-outlined p-button-sm mr-2"
+          (click)="openAddFieldDialog()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-save"
+          label="儲存設計 Schema"
+          class="p-button-primary p-button-sm"
+          [loading]="saving"
+          (click)="saveSchema()"
+        ></button>
+      </div>
+    </div>
+    <p class="subtitle">
+      在此自由自定義目前租戶專屬的動態頁面欄位、元件型態、驗證規則與順序。儲存後將同步生效於該租戶之動態填寫頁面。
+    </p>
+  </div>
+
+  <!-- 欄位設計清單 Table 卡片 -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="font-bold text-gray-800 text-lg">
+          <i class="pi pi-list mr-2 text-primary"></i>已配置欄位清單 (共 {{ fields.length }} 個欄位)
+        </span>
+      </div>
+      <div class="toolbar-right">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-refresh"
+          class="p-button-text p-button-rounded p-button-sm"
+          [loading]="loading"
+          pTooltip="重新載入"
+          (click)="loadSchema()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="fields"
+      [loading]="loading"
+      responsiveLayout="scroll"
+      styleClass="p-datatable-gridlines p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 70px" class="text-center">順序</th>
+          <th style="width: 140px">欄位代碼 (name)</th>
+          <th style="width: 180px">標籤名稱 (label)</th>
+          <th style="width: 140px" class="text-center">元件類型 (type)</th>
+          <th style="width: 120px" class="text-center">驗證規則</th>
+          <th>額外設定 / 選項</th>
+          <th style="width: 200px" class="text-center">操作</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-field let-i="rowIndex">
+        <tr>
+          <!-- 順序 -->
+          <td class="text-center font-bold text-gray-500">#{{ i + 1 }}</td>
+
+          <!-- 代碼 -->
+          <td>
+            <code class="field-name-badge">{{ field.name }}</code>
+          </td>
+
+          <!-- 標籤 -->
+          <td class="font-medium text-gray-800">{{ field.label }}</td>
+
+          <!-- 元件類型 -->
+          <td class="text-center">
+            <p-tag
+              [value]="field.type"
+              [severity]="getTypeBadgeSeverity(field.type)"
+              [rounded]="true"
+            ></p-tag>
+          </td>
+
+          <!-- 驗證規則 -->
+          <td class="text-center">
+            <span *ngIf="field.validators?.includes('required')" class="badge-required mr-1">必填</span>
+            <span *ngIf="field.validators?.includes('email')" class="badge-email">Email</span>
+            <span *ngIf="!field.validators || field.validators.length === 0" class="text-gray-400 text-xs">無</span>
+          </td>
+
+          <!-- 額外設定 -->
+          <td class="text-sm">
+            <span *ngIf="field.placeholder" class="text-gray-500 mr-2">
+              提示: "{{ field.placeholder }}"
+            </span>
+            <span *ngIf="field.type === 'dropdown' && field.options" class="options-tag">
+              {{ field.options.length }} 個下拉選項
+            </span>
+            <span *ngIf="field.type === 'calendar' && field.pattern" class="text-gray-600">
+              格式: {{ field.pattern }}
+            </span>
+          </td>
+
+          <!-- 操作按鈕 -->
+          <td class="text-center action-buttons">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-arrow-up"
+              class="p-button-text p-button-sm"
+              [disabled]="i === 0"
+              pTooltip="上移"
+              (click)="moveUp(i)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-arrow-down"
+              class="p-button-text p-button-sm mr-2"
+              [disabled]="i === fields.length - 1"
+              pTooltip="下移"
+              (click)="moveDown(i)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-text p-button-primary p-button-sm mr-1"
+              pTooltip="編輯欄位"
+              (click)="openEditFieldDialog(field, i)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm"
+              pTooltip="刪除欄位"
+              (click)="deleteField(i)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-5 text-gray-500">
+            目前尚未配置任何自訂欄位，請點擊「新增自訂欄位」或「載入官方範本」開始設計。
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- 即時 Schema JSON 預覽卡片 -->
+  <div class="schema-preview-card mt-4">
+    <div class="preview-header">
+      <div class="preview-title">
+        <i class="pi pi-code mr-2 text-primary"></i>
+        <span>即時 Schema 結構預覽 (Schema JSON Inspector) - 租戶：{{ currentTenant }}</span>
+      </div>
+      <span class="preview-badge">FormField[] 定義</span>
+    </div>
+    <div class="preview-body">
+      <pre>{{ fields | json }}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- 新增 / 編輯欄位對話框 (Dialog) -->
+<p-dialog
+  [(visible)]="fieldDialogVisible"
+  [header]="isEditMode ? '編輯表單欄位定義' : '新增自訂表單欄位'"
+  [modal]="true"
+  [style]="{ width: '680px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-content">
+    <div class="form-grid">
+      <!-- 欄位識別代碼 -->
+      <div class="field-item">
+        <label class="dialog-label">
+          欄位英文代碼 (name) <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formModel.name"
+          placeholder="例如: companyTaxId, urgentContact"
+          class="w-full"
+        />
+        <small class="text-gray-500 text-xs mt-1">用於表單資料鍵值 (Key) 與控制項綁定</small>
+      </div>
+
+      <!-- 欄位顯示名稱 -->
+      <div class="field-item">
+        <label class="dialog-label">
+          欄位標籤名稱 (label) <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formModel.label"
+          placeholder="例如: 企業統一編號, 緊急聯絡電話"
+          class="w-full"
+        />
+        <small class="text-gray-500 text-xs mt-1">介面上呈現給使用者看的標題名稱</small>
+      </div>
+
+      <!-- 元件類型 -->
+      <div class="field-item">
+        <label class="dialog-label">元件型別 (type)</label>
+        <p-dropdown
+          [options]="fieldTypeOptions"
+          [(ngModel)]="formModel.type"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        ></p-dropdown>
+      </div>
+
+      <!-- 佔位文字 -->
+      <div class="field-item">
+        <label class="dialog-label">輸入提示文字 (placeholder)</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formModel.placeholder"
+          placeholder="輸入框預設淺灰提示文字..."
+          class="w-full"
+        />
+      </div>
+
+      <!-- 驗證規則 Checkbox -->
+      <div class="field-item col-span-2">
+        <label class="dialog-label">驗證限制規則</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item mr-4">
+            <p-checkbox
+              [(ngModel)]="formModel.isRequired"
+              [binary]="true"
+              inputId="chk-required"
+            ></p-checkbox>
+            <label for="chk-required" class="ml-2 font-medium">必填欄位 (Required)</label>
+          </div>
+          <div class="checkbox-item" *ngIf="formModel.type === 'email' || formModel.type === 'text'">
+            <p-checkbox
+              [(ngModel)]="formModel.isEmail"
+              [binary]="true"
+              inputId="chk-email"
+            ></p-checkbox>
+            <label for="chk-email" class="ml-2 font-medium">Email 格式檢查</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 下拉選單專用選項編輯區 -->
+      <div class="field-item col-span-2 dropdown-options-section" *ngIf="formModel.type === 'dropdown'">
+        <label class="dialog-label">下拉選單選項清單 (Dropdown Options)</label>
+        <div class="option-input-row">
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="newOptionLabel"
+            placeholder="顯示名稱 (如: 台北總行)"
+            class="mr-2 flex-1"
+          />
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="newOptionValue"
+            placeholder="儲存值 (如: TPE_HQ)"
+            class="mr-2 flex-1"
+          />
+          <button
+            pButton
+            type="button"
+            icon="pi pi-plus"
+            label="新增選項"
+            class="p-button-sm p-button-outlined"
+            (click)="addDropdownOption()"
+          ></button>
+        </div>
+
+        <div class="options-chips-container mt-2">
+          <div *ngFor="let opt of formModel.options; let optIdx = index" class="option-chip">
+            <span class="chip-label">{{ opt.label }}</span>
+            <span class="chip-val">({{ opt.value }})</span>
+            <i class="pi pi-times chip-remove" (click)="removeDropdownOption(optIdx)"></i>
+          </div>
+          <span *ngIf="formModel.options.length === 0" class="text-xs text-gray-400">
+            目前尚未新增選項，請上方輸入後點擊新增。
+          </span>
+        </div>
+      </div>
+
+      <!-- 日期專用設定 -->
+      <div class="field-item" *ngIf="formModel.type === 'calendar'">
+        <label class="dialog-label">日期格式 (dateFormat)</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="formModel.pattern"
+          placeholder="例如: yy-mm-dd"
+          class="w-full"
+        />
+      </div>
+
+      <!-- 多行文字框專用設定 -->
+      <div class="field-item" *ngIf="formModel.type === 'textarea'">
+        <label class="dialog-label">預設行數 (rows)</label>
+        <p-inputNumber
+          [(ngModel)]="formModel.rows"
+          [min]="2"
+          [max]="20"
+          styleClass="w-full"
+        ></p-inputNumber>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="取消"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="fieldDialogVisible = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="確認保存欄位"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="saveFieldDialog()"
+    ></button>
+  </ng-template>
+</p-dialog>
