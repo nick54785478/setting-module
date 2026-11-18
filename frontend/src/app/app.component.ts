@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { LayoutComponent } from './core/components/layout/layout.component';
 import { SettingManagementComponent } from './features/setting/components/setting-management/setting-management.component';
 import { CategoryManagementComponent } from './features/category/components/category-management/category-management.component';
+import { DynamicPageComponent } from './features/dynamic-page/components/dynamic-page/dynamic-page.component';
 import { NavigationService, ActiveView } from './core/services/navigation.service';
 
 /**
@@ -11,7 +12,7 @@ import { NavigationService, ActiveView } from './core/services/navigation.servic
  * <p>
  * 遵循前端架構規範，最上層元件作為應用程式外殼載體，
  * 載入 Core 層 App Shell (LayoutComponent) 與 Feature 主畫面。
- * 根據 NavigationService 切換「功能設定管理」與「元資料字典」視圖。
+ * 根據 NavigationService 切換「功能設定管理」、「元資料字典」與「租戶自訂動態頁面」視圖。
  * </p>
  */
 @Component({
@@ -21,7 +22,8 @@ import { NavigationService, ActiveView } from './core/services/navigation.servic
     CommonModule,
     LayoutComponent,
     SettingManagementComponent,
-    CategoryManagementComponent
+    CategoryManagementComponent,
+    DynamicPageComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

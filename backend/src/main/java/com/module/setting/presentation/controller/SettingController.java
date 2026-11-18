@@ -7,6 +7,7 @@ import com.module.setting.application.port.in.GetSettingPagedUseCase;
 import com.module.setting.application.port.in.GetSettingUseCase;
 import com.module.setting.application.port.in.ReorderSettingUseCase;
 import com.module.setting.application.port.in.UpdateSettingUseCase;
+import com.module.setting.application.shared.command.CreateSettingCommand;
 import com.module.setting.application.shared.command.DeleteSettingCommand;
 import com.module.setting.application.shared.command.UpdateSettingCommand;
 import com.module.setting.application.shared.context.UserContextHolder;
@@ -439,5 +440,123 @@ public class SettingController {
                 .map(settingResourceAssembler::toMenuItemResource)
                 .toList();
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 取得指定租戶之動態頁面配置與表單資料
+     *
+     * @param pageCode 頁面代碼 (例如: TENANT_PROFILE)
+     * @param tenant   租戶代碼 (可選)
+     * @return 動態頁面設定資料
+     */
+    @Operation(summary = "取得指定租戶之動態頁面配置資料", description = "依據租戶代碼與頁面代碼 (pageCode) 檢索動態頁面表單資料")
+    @ApiResponse(responseCode = "200", description = "檢索成功")
+    @GetMapping("/pages/{pageCode}")
+    public ResponseEntity<SettingGottenResource> getPageSetting(
+            @PathVariable String pageCode,
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
+            @RequestParam(required = false) String tenant) {
+        String resolvedTenant = (tenant != null && !tenant.isBlank())
+                ? tenant
+                : UserContextHolder.getTenant();
+        if (resolvedTenant == null || resolvedTenant.isBlank()) {
+            resolvedTenant = "CW";
+        }
+
+        try {
+            SettingGottenResult result = getSettingUseCase.getByScope(resolvedTenant, pageCode);
+            return ResponseEntity.ok(settingResourceAssembler.toGottenResource(result));
+        } catch (IllegalArgumentException e) {
+            // 若尚無此頁面配置，回傳預設空結構
+            return ResponseEntity.ok(new SettingGottenResource(
+                    null,
+                    resolvedTenant,
+                    "DYNAMIC_PAGE",
+                    "PAGE_DATA",
+                    pageCode,
+                    pageCode,
+                    "Dynamic Page Form Data",
+                    "{}",
+                    1,
+                    "Y"
+            ));
+        }
+    }
+
+    /**
+     * 儲存或更新指定租戶之動態頁面配置與表單資料
+     *
+     * @param pageCode     頁面代碼 (例如: TENANT_PROFILE)
+     * @param tenant       租戶代碼 (可選)
+     * @param pageDataJson 動態表單 JSON 資料
+     * @return 儲存後之設定資料
+     */
+    @Operation(summary = "儲存或更新指定租戶之動態頁面配置資料", description = "儲存各租戶專屬之動態表單資料 (JSON 字串)")
+    @ApiResponse(responseCode = "200", description = "儲存成功")
+    @PutMapping("/pages/{pageCode}")
+    public ResponseEntity<SettingGottenResource> savePageSetting(
+            @PathVariable String pageCode,
+            @Parameter(description = "租戶識別碼 (可選)", example = "CW")
+            @RequestParam(required = false) String tenant,
+            @RequestBody(required = false) String pageDataJson) {
+        String resolvedTenant = (tenant != null && !tenant.isBlank())
+                ? tenant
+                : UserContextHolder.getTenant();
+        if (resolvedTenant == null || resolvedTenant.isBlank()) {
+            resolvedTenant = "CW";
+        }
+
+        String dataJson = (pageDataJson != null && !pageDataJson.isBlank()) ? pageDataJson : "{}";
+
+        try {
+            SettingGottenResult existing = getSettingUseCase.getByScope(resolvedTenant, pageCode);
+            var updateCommand = new UpdateSettingCommand(
+                    existing.id(),
+                    existing.category(),
+                    existing.subCategory(),
+                    existing.name(),
+                    existing.description(),
+                    dataJson,
+                    existing.priorityNo(),
+                    "Y"
+            );
+            var updated = updateSettingUseCase.update(updateCommand);
+            return ResponseEntity.ok(new SettingGottenResource(
+                    updated.id(),
+                    updated.tenant(),
+                    updated.category(),
+                    updated.subCategory(),
+                    updated.code(),
+                    updated.name(),
+                    updated.description(),
+                    updated.value(),
+                    updated.priorityNo(),
+                    updated.activeFlag()
+            ));
+        } catch (IllegalArgumentException e) {
+            var createCommand = new CreateSettingCommand(
+                    resolvedTenant,
+                    "DYNAMIC_PAGE",
+                    "PAGE_DATA",
+                    pageCode,
+                    pageCode,
+                    "Dynamic Page Form Data for " + pageCode,
+                    dataJson,
+                    1
+            );
+            var created = createSettingUseCase.create(createCommand);
+            return ResponseEntity.ok(new SettingGottenResource(
+                    created.id(),
+                    created.tenant(),
+                    created.category(),
+                    created.subCategory(),
+                    created.code(),
+                    created.name(),
+                    created.description(),
+                    created.value(),
+                    created.priorityNo(),
+                    created.activeFlag()
+            ));
+        }
     }
 }

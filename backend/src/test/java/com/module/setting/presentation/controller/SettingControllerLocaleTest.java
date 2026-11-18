@@ -5,6 +5,7 @@ import com.module.setting.application.shared.command.UpdateSettingCommand;
 import com.module.setting.application.shared.result.SettingGottenResult;
 import com.module.setting.application.shared.result.SettingUpdatedResult;
 import com.module.setting.presentation.assembler.SettingResourceAssembler;
+import com.module.setting.presentation.resource.out.SettingGottenResource;
 import com.module.setting.presentation.resource.out.TenantLocaleOptionGottenResource;
 import com.module.setting.presentation.resource.out.TenantMenuItemGottenResource;
 import org.junit.jupiter.api.DisplayName;
@@ -214,5 +215,89 @@ class SettingControllerLocaleTest {
         assertThat(response.getBody().get(0).priorityNo()).isEqualTo(1);
         assertThat(response.getBody().get(1).id()).isEqualTo(9L);
         assertThat(response.getBody().get(1).priorityNo()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("取得動態頁面配置 - 存在時回傳已存資料")
+    void shouldGetPageSetting_whenExists() {
+        // Arrange
+        SettingGottenResult mockResult = new SettingGottenResult(
+                20L, "CW", "DYNAMIC_PAGE", "PAGE_DATA", "TENANT_PROFILE", "TENANT_PROFILE", "desc", "{\"tier\":\"ENTERPRISE\"}", 1, "Y"
+        );
+        SettingGottenResource mockResource = new SettingGottenResource(
+                20L, "CW", "DYNAMIC_PAGE", "PAGE_DATA", "TENANT_PROFILE", "TENANT_PROFILE", "desc", "{\"tier\":\"ENTERPRISE\"}", 1, "Y"
+        );
+        when(getSettingUseCase.getByScope("CW", "TENANT_PROFILE")).thenReturn(mockResult);
+        when(settingResourceAssembler.toGottenResource(mockResult)).thenReturn(mockResource);
+
+        // Act
+        var response = settingController.getPageSetting("TENANT_PROFILE", "CW");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo("TENANT_PROFILE");
+        assertThat(response.getBody().value()).isEqualTo("{\"tier\":\"ENTERPRISE\"}");
+    }
+
+    @Test
+    @DisplayName("取得動態頁面配置 - 尚無配置時回傳預設空結構")
+    void shouldGetPageSetting_whenNotExists_returnsDefault() {
+        // Arrange
+        when(getSettingUseCase.getByScope("ACME", "TENANT_PROFILE"))
+                .thenThrow(new IllegalArgumentException("Not found"));
+
+        // Act
+        var response = settingController.getPageSetting("TENANT_PROFILE", "ACME");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().tenant()).isEqualTo("ACME");
+        assertThat(response.getBody().code()).isEqualTo("TENANT_PROFILE");
+        assertThat(response.getBody().value()).isEqualTo("{}");
+    }
+
+    @Test
+    @DisplayName("儲存動態頁面配置 - 已存在時更新設定")
+    void shouldSavePageSetting_whenExists_updates() {
+        // Arrange
+        SettingGottenResult existing = new SettingGottenResult(
+                20L, "CW", "DYNAMIC_PAGE", "PAGE_DATA", "TENANT_PROFILE", "TENANT_PROFILE", "desc", "{}", 1, "Y"
+        );
+        SettingUpdatedResult updated = new SettingUpdatedResult(
+                20L, "CW", "DYNAMIC_PAGE", "PAGE_DATA", "TENANT_PROFILE", "TENANT_PROFILE", "desc", "{\"tier\":\"ENTERPRISE\"}", 1, "Y"
+        );
+        when(getSettingUseCase.getByScope("CW", "TENANT_PROFILE")).thenReturn(existing);
+        when(updateSettingUseCase.update(any())).thenReturn(updated);
+
+        // Act
+        var response = settingController.savePageSetting("TENANT_PROFILE", "CW", "{\"tier\":\"ENTERPRISE\"}");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().value()).isEqualTo("{\"tier\":\"ENTERPRISE\"}");
+    }
+
+    @Test
+    @DisplayName("儲存動態頁面配置 - 不存在時新增設定")
+    void shouldSavePageSetting_whenNotExists_creates() {
+        // Arrange
+        when(getSettingUseCase.getByScope("CW", "NEW_PAGE"))
+                .thenThrow(new IllegalArgumentException("Not found"));
+        var createdResult = new com.module.setting.application.shared.result.SettingCreatedResult(
+                25L, "CW", "DYNAMIC_PAGE", "PAGE_DATA", "NEW_PAGE", "NEW_PAGE", "desc", "{\"tier\":\"STANDARD\"}", 1, "Y"
+        );
+        when(createSettingUseCase.create(any())).thenReturn(createdResult);
+
+        // Act
+        var response = settingController.savePageSetting("NEW_PAGE", "CW", "{\"tier\":\"STANDARD\"}");
+
+        // Assert
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo("NEW_PAGE");
+        assertThat(response.getBody().value()).isEqualTo("{\"tier\":\"STANDARD\"}");
     }
 }

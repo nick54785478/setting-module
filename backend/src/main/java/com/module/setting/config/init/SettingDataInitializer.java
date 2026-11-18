@@ -71,7 +71,8 @@ public class SettingDataInitializer implements ApplicationRunner {
         var categories = List.of(
                 SettingCategory.of(defaultTenant, "SYSTEM", "系統配置", "系統底層與全域基礎設施配置維度", 1),
                 SettingCategory.of(defaultTenant, "LOCALE", "系統語系配置", "管理各租戶支援的系統語言環境與國際化設定", 2),
-                SettingCategory.of(defaultTenant, "MENU", "側邊欄選單配置", "管理側邊導航列之分組、項目、圖示、路由與顯示順序", 3)
+                SettingCategory.of(defaultTenant, "MENU", "側邊欄選單配置", "管理側邊導航列之分組、項目、圖示、路由與顯示順序", 3),
+                SettingCategory.of(defaultTenant, "DYNAMIC_PAGE", "動態頁面配置", "管理各租戶專屬自訂動態頁面與表單填寫資料", 4)
         );
 
         for (var cat : categories) {
@@ -138,7 +139,7 @@ public class SettingDataInitializer implements ApplicationRunner {
                 Setting.create(
                         SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_TENANT"),
                         SettingProfile.of("租戶隔離中心", "多租戶獨立數據空間與隔離策略配置"),
-                        "{\"icon\":\"pi pi-building\"}",
+                        "{\"icon\":\"pi pi-building\",\"view\":\"dynamic-page\"}",
                         3
                 ),
                 // 系統與安全維運群組

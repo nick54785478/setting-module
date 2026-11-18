@@ -1,0 +1,221 @@
+.dynamic-page-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .header-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.25rem 1.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+
+    .header-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      .title-with-badge {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+
+        h2 {
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0;
+        }
+
+        .tenant-badge {
+          background: #eff6ff;
+          color: #2563eb;
+          border: 1px solid #bfdbfe;
+          padding: 0.25rem 0.65rem;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+        }
+
+        .code-badge {
+          background: #f1f5f9;
+          color: #475569;
+          border: 1px solid #e2e8f0;
+          padding: 0.25rem 0.65rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .subtitle {
+      margin: 0.5rem 0 0;
+      font-size: 0.875rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  }
+
+  .form-wrapper {
+    ::ng-deep .p-panel {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+
+      .p-panel-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: #1e293b;
+
+        .panel-tag {
+          font-size: 0.8rem;
+          color: #0284c7;
+          background: #e0f2fe;
+          padding: 0.2rem 0.6rem;
+          border-radius: 16px;
+          font-weight: 500;
+        }
+      }
+
+      .p-panel-content {
+        padding: 1.75rem;
+      }
+    }
+  }
+
+  .grid-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+
+    .form-field-item {
+      display: flex;
+      flex-direction: column;
+
+      &.col-span-full {
+        grid-column: 1 / -1;
+      }
+
+      .field-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+
+        .asterisk {
+          color: #ef4444;
+          margin-left: 0.25rem;
+          font-weight: bold;
+        }
+      }
+
+      .w-full {
+        width: 100%;
+      }
+
+      .error-container {
+        margin-top: 0.35rem;
+
+        .error-msg {
+          color: #ef4444;
+          font-size: 0.775rem;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+        }
+      }
+    }
+  }
+
+  .actions-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .suggestion-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.25rem 0;
+
+    .suggestion-label {
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .suggestion-value {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-left: 0.5rem;
+    }
+  }
+
+  .preview-card {
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    overflow: hidden;
+    color: #e2e8f0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: #0f172a;
+      border-bottom: 1px solid #334155;
+
+      .preview-title {
+        display: flex;
+        align-items: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .preview-badge {
+        font-size: 0.7rem;
+        background: #3b82f6;
+        color: #ffffff;
+        padding: 0.15rem 0.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+      }
+    }
+
+    .preview-body {
+      padding: 1rem 1.25rem;
+      max-height: 260px;
+      overflow-y: auto;
+
+      pre {
+        margin: 0;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #38bdf8;
+      }
+    }
+  }
+}

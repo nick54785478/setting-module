@@ -1,0 +1,227 @@
+<p-toast></p-toast>
+
+<div class="dynamic-page-container">
+  <!-- 頁面頂部資訊 Header 卡片 -->
+  <div class="header-card">
+    <div class="header-title-row">
+      <div class="title-with-badge">
+        <i class="pi pi-building text-primary text-2xl mr-2"></i>
+        <h2>租戶專屬自訂動態表單</h2>
+        <span class="tenant-badge">
+          <i class="pi pi-shield mr-1"></i>當前租戶：{{ currentTenant }}
+        </span>
+        <span class="code-badge">
+          頁面識別：{{ pageCode }}
+        </span>
+      </div>
+      <div class="header-actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-refresh"
+          label="重新載入"
+          class="p-button-outlined p-button-sm mr-2"
+          [loading]="loading"
+          (click)="loadPageConfiguration()"
+        ></button>
+      </div>
+    </div>
+    <p class="subtitle">
+      依據 Function Configurable 架構，表單結構與資料完全由租戶動態隔離與持久化。切換不同租戶時即刻響應切換對應資料空間。
+    </p>
+  </div>
+
+  <!-- 動態生成表單 Panel -->
+  <form [formGroup]="formGroup" class="form-wrapper">
+    <p-panel header="租戶資料空間維護表單" [toggleable]="true">
+      <ng-template pTemplate="icons">
+        <span class="panel-tag">
+          <i class="pi pi-database mr-1"></i>JSON 聚合持久化
+        </span>
+      </ng-template>
+
+      <div class="grid-form">
+        <ng-container *ngFor="let field of formFields">
+          <div
+            class="form-field-item"
+            [ngClass]="{
+              'col-span-full': field.type === 'textarea',
+              'col-span-half': field.type !== 'textarea'
+            }"
+          >
+            <ng-container [ngSwitch]="field.type">
+              <label
+                class="field-label"
+                [ngClass]="{ 'required-label': field.validators.includes('required') }"
+              >
+                {{ field.label }}
+                <span *ngIf="field.validators.includes('required')" class="asterisk">*</span>
+              </label>
+
+              <!-- Text Input -->
+              <ng-container *ngSwitchCase="'text'">
+                <input
+                  type="text"
+                  pInputText
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                />
+              </ng-container>
+
+              <!-- Number Input -->
+              <ng-container *ngSwitchCase="'number'">
+                <p-inputNumber
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                ></p-inputNumber>
+              </ng-container>
+
+              <!-- Email Input -->
+              <ng-container *ngSwitchCase="'email'">
+                <input
+                  type="email"
+                  pInputText
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                />
+              </ng-container>
+
+              <!-- Time Input -->
+              <ng-container *ngSwitchCase="'time'">
+                <input
+                  type="time"
+                  pInputText
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                />
+              </ng-container>
+
+              <!-- Dropdown Input -->
+              <ng-container *ngSwitchCase="'dropdown'">
+                <p-dropdown
+                  [options]="field.options || []"
+                  optionLabel="label"
+                  optionValue="value"
+                  [placeholder]="field.placeholder || '請選擇'"
+                  [filter]="true"
+                  filterBy="label,value"
+                  [showClear]="true"
+                  appendTo="body"
+                  [formControlName]="field.name"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                ></p-dropdown>
+              </ng-container>
+
+              <!-- Calendar Input -->
+              <ng-container *ngSwitchCase="'calendar'">
+                <p-calendar
+                  [showIcon]="true"
+                  appendTo="body"
+                  [formControlName]="field.name"
+                  [dateFormat]="field.pattern || 'yy-mm-dd'"
+                  dataType="string"
+                  [placeholder]="field.placeholder || 'yy-mm-dd'"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                ></p-calendar>
+              </ng-container>
+
+              <!-- AutoComplete Input -->
+              <ng-container *ngSwitchCase="'autocomplete'">
+                <p-autoComplete
+                  [suggestions]="allSuggestions"
+                  (completeMethod)="search($event, field.uri)"
+                  [forceSelection]="false"
+                  appendTo="body"
+                  [dropdown]="true"
+                  [completeOnFocus]="true"
+                  [placeholder]="field.placeholder || '輸入關鍵字搜尋...'"
+                  emptyMessage="查無匹配資料"
+                  field="label"
+                  [formControlName]="field.name"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                >
+                  <ng-template let-data pTemplate="item">
+                    <div class="suggestion-item">
+                      <span class="suggestion-label">{{ data.label }}</span>
+                      <span class="suggestion-value">({{ data.value }})</span>
+                    </div>
+                  </ng-template>
+                </p-autoComplete>
+              </ng-container>
+
+              <!-- Textarea Input -->
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea
+                  [formControlName]="field.name"
+                  [rows]="field.rows || 3"
+                  [cols]="field.cols || 30"
+                  pInputTextarea
+                  [autoResize]="true"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                ></textarea>
+              </ng-container>
+
+              <!-- 驗證錯誤訊息提示 -->
+              <div *ngIf="formControlInvalid(field.name)" class="error-container">
+                <small class="error-msg" *ngIf="formControl(field.name)?.errors?.['required']">
+                  <i class="pi pi-exclamation-circle mr-1"></i>此欄位為必填項目
+                </small>
+                <small class="error-msg" *ngIf="formControl(field.name)?.errors?.['email']">
+                  <i class="pi pi-exclamation-circle mr-1"></i>電子信箱格式不正確
+                </small>
+              </div>
+            </ng-container>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- 表單操作按鈕區 -->
+      <div class="actions-row">
+        <button
+          type="button"
+          pButton
+          label="儲存設定"
+          icon="pi pi-check"
+          class="p-button-primary mr-3"
+          [loading]="saving"
+          (click)="onSubmit()"
+        ></button>
+        <button
+          type="button"
+          pButton
+          label="重設表單"
+          icon="pi pi-undo"
+          class="p-button-outlined p-button-secondary"
+          (click)="clear()"
+        ></button>
+      </div>
+    </p-panel>
+  </form>
+
+  <!-- 即時 JSON 預覽卡片 -->
+  <div class="preview-card mt-4">
+    <div class="preview-header">
+      <div class="preview-title">
+        <i class="pi pi-code mr-2 text-primary"></i>
+        <span>即時資料預覽 (Live Data Inspector) - 租戶：{{ currentTenant }}</span>
+      </div>
+      <span class="preview-badge">純 JSON 聚合資料</span>
+    </div>
+    <div class="preview-body">
+      <pre>{{ formGroup.value | json }}</pre>
+    </div>
+  </div>
+</div>
