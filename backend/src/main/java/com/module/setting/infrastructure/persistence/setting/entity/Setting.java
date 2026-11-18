@@ -63,10 +63,11 @@ public class Setting {
     /**
      * 設定數值 (Setting Value)
      * <p>
-     * 儲存功能配置值、路由標識或對應內容 (例如: "Dashboard", "User", "管理者")。
+     * 儲存功能配置值、路由標識或對應內容 (例如: "Dashboard", "User", "管理者")，
+     * 亦支援儲存大容量 JSON 配置或動態頁面 Schema / Data，因此定義為 TEXT。
      * </p>
      */
-    @Column(name = "value")
+    @Column(name = "value", columnDefinition = "TEXT")
     private String value;
 
     /**
