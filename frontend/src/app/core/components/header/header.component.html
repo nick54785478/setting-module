@@ -91,9 +91,17 @@
             <button
               pButton
               type="button"
-              label="維護租戶語系"
+              label="前往語系維護頁面"
+              icon="pi pi-external-link"
+              class="p-button-text p-button-sm w-full manage-locale-btn mb-1"
+              (click)="goToLocalePage(); localeOp.hide()"
+            ></button>
+            <button
+              pButton
+              type="button"
+              label="快速管理對話框"
               icon="pi pi-cog"
-              class="p-button-text p-button-sm w-full manage-locale-btn"
+              class="p-button-text p-button-secondary p-button-sm w-full manage-locale-btn"
               (click)="openLocaleManageDialog(); localeOp.hide()"
             ></button>
           </div>

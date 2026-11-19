@@ -185,8 +185,9 @@ public class SettingDataInitializer implements ApplicationRunner {
      * <ul>
      *   <li><b>MENU_SETTING (功能設定管理)</b>：view = "setting", icon = "pi pi-sliders-h", badge = "核心" (順序 1)</li>
      *   <li><b>MENU_CATEGORY (元資料字典)</b>：view = "category", icon = "pi pi-database", badge = "元資料" (順序 2)</li>
-     *   <li><b>MENU_DESIGNER (動態表單設計)</b>：view = "dynamic-designer", icon = "pi pi-pencil", badge = "設計" (順序 3)</li>
-     *   <li><b>MENU_TENANT (租戶畫像資料)</b>：view = "tenant-profile", icon = "pi pi-building" (順序 4)</li>
+     *   <li><b>MENU_LOCALE (系統語系設定)</b>：view = "locale", icon = "pi pi-globe", badge = "語系" (順序 3)</li>
+     *   <li><b>MENU_DESIGNER (動態表單設計)</b>：view = "dynamic-designer", icon = "pi pi-pencil", badge = "設計" (順序 4)</li>
+     *   <li><b>MENU_TENANT (租戶畫像資料)</b>：view = "tenant-profile", icon = "pi pi-building" (順序 5)</li>
      * </ul>
      * <b>分組二：系統與安全維運</b>
      * <ul>
@@ -216,16 +217,22 @@ public class SettingDataInitializer implements ApplicationRunner {
                         2
                 ),
                 Setting.create(
+                        SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_LOCALE"),
+                        SettingProfile.of("系統語系設定", "多租戶支援之國際化語系維護與預設值配置"),
+                        "{\"icon\":\"pi pi-globe\",\"badge\":\"語系\",\"view\":\"locale\"}",
+                        3
+                ),
+                Setting.create(
                         SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_DESIGNER"),
                         SettingProfile.of("動態表單設計", "視覺化自訂租戶動態表單欄位與配置"),
                         "{\"icon\":\"pi pi-pencil\",\"badge\":\"設計\",\"view\":\"dynamic-designer\"}",
-                        3
+                        4
                 ),
                 Setting.create(
                         SettingScope.of(defaultTenant, "MENU", "核心業務配置", "MENU_TENANT"),
                         SettingProfile.of("租戶畫像資料", "多租戶專屬自訂畫像資料與動態表單配置"),
                         "{\"icon\":\"pi pi-building\",\"view\":\"tenant-profile\"}",
-                        4
+                        5
                 ),
                 // 系統與安全維運群組
                 Setting.create(

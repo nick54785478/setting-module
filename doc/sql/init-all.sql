@@ -94,8 +94,9 @@ INSERT INTO `setting` (`tenant`, `category`, `sub_category`, `code`, `name`, `de
 VALUES
 ('CW', 'MENU', '核心業務配置', 'MENU_SETTING', '功能設定管理', '核心業務設定項目增刪改查管理', '{"icon":"pi pi-sliders-h","badge":"核心","view":"setting"}', 1, 'Y'),
 ('CW', 'MENU', '核心業務配置', 'MENU_CATEGORY', '元資料字典', '維度大分類字典維護', '{"icon":"pi pi-database","badge":"元資料","view":"category"}', 2, 'Y'),
-('CW', 'MENU', '核心業務配置', 'MENU_DESIGNER', '動態表單設計', '視覺化自訂租戶動態表單欄位與配置', '{"icon":"pi pi-pencil","badge":"設計","view":"dynamic-designer"}', 3, 'Y'),
-('CW', 'MENU', '核心業務配置', 'MENU_TENANT', '租戶畫像資料', '多租戶專屬自訂畫像資料與動態表單配置', '{"icon":"pi pi-building","view":"tenant-profile"}', 4, 'Y'),
+('CW', 'MENU', '核心業務配置', 'MENU_LOCALE', '系統語系設定', '多租戶支援之國際化語系維護與預設值配置', '{"icon":"pi pi-globe","badge":"語系","view":"locale"}', 3, 'Y'),
+('CW', 'MENU', '核心業務配置', 'MENU_DESIGNER', '動態表單設計', '視覺化自訂租戶動態表單欄位與配置', '{"icon":"pi pi-pencil","badge":"設計","view":"dynamic-designer"}', 4, 'Y'),
+('CW', 'MENU', '核心業務配置', 'MENU_TENANT', '租戶畫像資料', '多租戶專屬自訂畫像資料與動態表單配置', '{"icon":"pi pi-building","view":"tenant-profile"}', 5, 'Y'),
 
 -- 3.2 系統與安全維運群組
 ('CW', 'MENU', '系統與安全維運', 'MENU_ROLE', '系統權限角色', 'RBAC 角色與細粒度操作授權矩陣', '{"icon":"pi pi-shield"}', 1, 'Y'),

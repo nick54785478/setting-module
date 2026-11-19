@@ -107,6 +107,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.currentViewLabel = '動態表單設計';
       } else if (view === 'tenant-profile' || view === 'dynamic-page') {
         this.currentViewLabel = '租戶畫像資料 (TENANT_PROFILE)';
+      } else if (view === 'locale') {
+        this.currentViewLabel = '系統語系設定';
       } else {
         this.currentViewLabel = '功能設定管理';
       }
@@ -196,6 +198,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       life: 2500
     });
     this.loadTenantLocales();
+  }
+
+  /**
+   * 前往系統語系維護完整頁面
+   */
+  goToLocalePage(): void {
+    this.navigationService.setView('locale');
   }
 
   /**

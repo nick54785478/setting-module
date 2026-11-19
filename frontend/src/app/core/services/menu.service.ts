@@ -65,8 +65,9 @@ export class MenuService {
       items: [
         { label: '功能設定管理', icon: 'pi pi-sliders-h', active: true, badge: '核心', view: 'setting' as ActiveView, priorityNo: 1 },
         { label: '元資料字典', icon: 'pi pi-database', active: false, badge: '元資料', view: 'category' as ActiveView, priorityNo: 2 },
-        { label: '動態表單設計', icon: 'pi pi-pencil', active: false, badge: '設計', view: 'dynamic-designer' as ActiveView, priorityNo: 3 },
-        { label: '租戶畫像資料', icon: 'pi pi-building', active: false, view: 'tenant-profile' as ActiveView, priorityNo: 4 }
+        { label: '系統語系設定', icon: 'pi pi-globe', active: false, badge: '語系', view: 'locale' as ActiveView, priorityNo: 3 },
+        { label: '動態表單設計', icon: 'pi pi-pencil', active: false, badge: '設計', view: 'dynamic-designer' as ActiveView, priorityNo: 4 },
+        { label: '租戶畫像資料', icon: 'pi pi-building', active: false, view: 'tenant-profile' as ActiveView, priorityNo: 5 }
       ]
     },
     {
@@ -165,6 +166,8 @@ export class MenuService {
           view = 'setting';
         } else if (item.code === 'MENU_CATEGORY') {
           view = 'category';
+        } else if (item.code === 'MENU_LOCALE') {
+          view = 'locale';
         }
       }
 
@@ -184,6 +187,24 @@ export class MenuService {
         groupMap.set(groupName, []);
       }
       groupMap.get(groupName)!.push(menuItem);
+    }
+
+    // 若後端資料庫尚未初始化 MENU_LOCALE，主動補充確保側邊欄必定具備語系維護超連結
+    const hasLocaleMenu = items.some((i) => i.code === 'MENU_LOCALE' || i.name.includes('語系'));
+    if (!hasLocaleMenu) {
+      let coreGroup = groupMap.get('核心業務配置');
+      if (!coreGroup) {
+        coreGroup = [];
+        groupMap.set('核心業務配置', coreGroup);
+      }
+      coreGroup.push({
+        code: 'MENU_LOCALE',
+        label: '系統語系設定',
+        icon: 'pi pi-globe',
+        badge: '語系',
+        view: 'locale' as ActiveView,
+        priorityNo: 3
+      });
     }
 
     const result: MenuGroup[] = [];

@@ -1,0 +1,393 @@
+<!-- Toast 與確認對話框 -->
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="enterprise-page">
+  <!-- 頁面標題列 -->
+  <div class="page-header">
+    <div class="header-info">
+      <h2 class="page-title">
+        <i class="pi pi-globe title-icon"></i>
+        系統語系設定 (Locale Management)
+        <span class="page-tag">LOCALE UI Config</span>
+      </h2>
+      <p class="page-desc">
+        管理各租戶專屬支援之國際化語系項目，支援設定租戶預設語系、即時系統語言切換，以及常用官方標準語系範本一鍵建立。
+      </p>
+      <div class="header-badges">
+        <span class="info-badge tenant-badge">
+          <i class="pi pi-shield"></i> 當前租戶：<strong>{{ currentTenant }}</strong>
+        </span>
+        <span class="info-badge count-badge">
+          <i class="pi pi-check-circle"></i> 有效語系：{{ activeCount }} / {{ allLocales.length }}
+        </span>
+        <span class="info-badge in-use-pill" *ngIf="defaultLocaleItem">
+          <i class="pi pi-star-fill text-amber-500"></i> 預設首選：<strong>{{ defaultLocaleItem.name }} ({{ defaultLocaleItem.code }})</strong>
+        </span>
+        <span class="info-badge current-pill">
+          <i class="pi pi-compass"></i> 當前系統套用：<strong>{{ currentActiveLocaleCode }}</strong>
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        label="重新整理"
+        icon="pi pi-refresh"
+        class="p-button-outlined p-button-secondary p-button-sm"
+        [loading]="loading"
+        (click)="loadLocales()"
+      ></button>
+      <button
+        pButton
+        label="新增語系"
+        icon="pi pi-plus"
+        class="p-button-primary p-button-sm"
+        (click)="openCreateDialog()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- 常用語系快捷列與查詢卡片 -->
+  <div class="enterprise-card quick-toolbar-card">
+    <div class="quick-templates-section">
+      <div class="section-title">
+        <i class="pi pi-bolt text-amber-500"></i>
+        <span>常用標準語系快捷帶入：</span>
+      </div>
+      <div class="template-chips">
+        <button
+          *ngFor="let tpl of quickTemplates"
+          type="button"
+          class="template-chip"
+          (click)="openCreateDialog(tpl)"
+          pTooltip="點擊直接以 {{ tpl.name }} ({{ tpl.code }}) 建立新項目"
+          tooltipPosition="top"
+        >
+          <span class="chip-code">{{ tpl.code }}</span>
+          <span class="chip-name">{{ tpl.name }}</span>
+          <i class="pi pi-plus-circle chip-add-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 查詢條件過濾列 -->
+    <div class="filter-section">
+      <div class="filter-fields">
+        <div class="filter-item search-input">
+          <span class="p-input-icon-left w-full">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="searchKeyword"
+              placeholder="搜尋語系代碼、名稱或說明..."
+              class="w-full p-inputtext-sm"
+              (keyup.enter)="onSearch()"
+            />
+          </span>
+        </div>
+
+        <div class="filter-item status-select">
+          <p-dropdown
+            [options]="statusFilterOptions"
+            [(ngModel)]="selectedStatus"
+            placeholder="啟用狀態"
+            styleClass="w-full p-inputtext-sm"
+            (onChange)="onSearch()"
+          ></p-dropdown>
+        </div>
+
+        <div class="filter-actions">
+          <button
+            pButton
+            type="button"
+            label="查詢"
+            icon="pi pi-search"
+            class="p-button-primary p-button-sm"
+            (click)="onSearch()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="重設"
+            icon="pi pi-replay"
+            class="p-button-outlined p-button-secondary p-button-sm"
+            (click)="onResetSearch()"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 語系列表卡片 -->
+  <div class="enterprise-card table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <i class="pi pi-list"></i>
+        <span class="toolbar-title">語系配置清單</span>
+        <span class="record-counter">共 {{ filteredLocales.length }} 筆</span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="filteredLocales"
+      [loading]="loading"
+      [rowHover]="true"
+      styleClass="p-datatable-sm p-datatable-striped"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px; text-align: center;">順序</th>
+          <th style="width: 140px;">語系代碼</th>
+          <th style="width: 180px;">語系名稱</th>
+          <th>語系說明</th>
+          <th style="width: 130px; text-align: center;">租戶預設</th>
+          <th style="width: 140px; text-align: center;">系統切換</th>
+          <th style="width: 100px; text-align: center;">啟用狀態</th>
+          <th style="width: 110px; text-align: center;">維護操作</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <!-- 順序 -->
+          <td style="text-align: center;">
+            <span class="priority-num">#{{ item.priorityNo }}</span>
+          </td>
+
+          <!-- 語系代碼 -->
+          <td>
+            <span class="code-pill">
+              <i class="pi pi-globe text-primary mr-1"></i>{{ item.code }}
+            </span>
+          </td>
+
+          <!-- 語系名稱 -->
+          <td>
+            <span class="locale-name-text">{{ item.name }}</span>
+          </td>
+
+          <!-- 說明 -->
+          <td>
+            <span class="locale-desc-text">{{ item.description || '-' }}</span>
+          </td>
+
+          <!-- 租戶預設 -->
+          <td style="text-align: center;">
+            <span *ngIf="item.isDefault" class="default-badge">
+              <i class="pi pi-star-fill"></i> 預設首選
+            </span>
+            <button
+              *ngIf="!item.isDefault"
+              pButton
+              type="button"
+              label="設為預設"
+              icon="pi pi-star"
+              class="p-button-outlined p-button-sm default-action-btn"
+              [disabled]="item.activeFlag !== 'Y'"
+              (click)="setDefault(item)"
+              pTooltip="設為租戶 [{{ currentTenant }}] 之預設語系"
+              tooltipPosition="top"
+            ></button>
+          </td>
+
+          <!-- 系統當前使用 / 切換 -->
+          <td style="text-align: center;">
+            <span *ngIf="item.code === currentActiveLocaleCode" class="in-use-badge">
+              <i class="pi pi-check-circle"></i> 使用中
+            </span>
+            <button
+              *ngIf="item.code !== currentActiveLocaleCode"
+              pButton
+              type="button"
+              label="套用此語系"
+              icon="pi pi-sync"
+              class="p-button-outlined p-button-secondary p-button-sm apply-btn"
+              [disabled]="item.activeFlag !== 'Y'"
+              (click)="applyLocale(item)"
+              pTooltip="即時切換系統當前語系為此項目"
+              tooltipPosition="top"
+            ></button>
+          </td>
+
+          <!-- 啟用狀態 -->
+          <td style="text-align: center;">
+            <p-tag
+              [severity]="item.activeFlag === 'Y' ? 'success' : 'danger'"
+              [value]="item.activeFlag === 'Y' ? '有效' : '已停用'"
+            ></p-tag>
+          </td>
+
+          <!-- 維護操作 -->
+          <td style="text-align: center;">
+            <div class="row-actions">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="action-btn edit-btn"
+                (click)="openEditDialog(item)"
+                pTooltip="編輯語系"
+                tooltipPosition="top"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="action-btn delete-btn"
+                [disabled]="item.isDefault"
+                (click)="confirmDelete(item)"
+                pTooltip="{{ item.isDefault ? '預設語系不可刪除' : '停用/刪除語系' }}"
+                tooltipPosition="top"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center p-4 empty-state-cell">
+            <div class="empty-state">
+              <i class="pi pi-globe text-4xl text-gray-400 mb-2"></i>
+              <p class="text-gray-500 font-medium">查無符合條件的語系設定項目</p>
+              <p class="text-gray-400 text-sm">可點擊上方常用語系快捷標籤或「新增語系」按鈕建立。</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- 新增 / 編輯語系對話框 -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="isEditMode ? '編輯租戶語系' : '新增租戶語系'"
+  [modal]="true"
+  [style]="{ width: '540px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-content-body">
+    <!-- 常用範本快速套用 (僅新增模式顯示) -->
+    <div class="form-field-group mb-3" *ngIf="!isEditMode">
+      <label class="form-label">
+        <i class="pi pi-bolt text-amber-500 mr-1"></i>快捷範本選擇 (選用)：
+      </label>
+      <p-dropdown
+        [options]="quickTemplates"
+        [(ngModel)]="selectedTemplate"
+        optionLabel="name"
+        [showClear]="true"
+        placeholder="選擇常用官方語系可自動帶入代碼與名稱..."
+        styleClass="w-full p-inputtext-sm"
+        (onChange)="onTemplateChange()"
+      >
+        <ng-template let-tpl pTemplate="item">
+          <div class="flex align-items-center justify-content-between w-full">
+            <span>{{ tpl.name }} ({{ tpl.description }})</span>
+            <span class="code-pill text-xs">{{ tpl.code }}</span>
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </div>
+
+    <!-- 語系代碼 -->
+    <div class="form-field-group mb-3">
+      <label class="form-label required">語系代碼 (Locale Code)：</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="formModel.code"
+        [disabled]="isEditMode"
+        placeholder="例如: zh-TW, en-US, ja-JP"
+        class="w-full p-inputtext-sm"
+      />
+      <small class="text-gray-400" *ngIf="!isEditMode">標準 BCP 47 語言識別標籤（如 zh-TW, en-US）</small>
+      <small class="text-gray-400" *ngIf="isEditMode">語系代碼建立後不可修改</small>
+    </div>
+
+    <!-- 語系名稱 -->
+    <div class="form-field-group mb-3">
+      <label class="form-label required">語系名稱 (Display Name)：</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="formModel.name"
+        placeholder="例如: 繁體中文, English, 日本語"
+        class="w-full p-inputtext-sm"
+      />
+    </div>
+
+    <!-- 語系詳細說明 -->
+    <div class="form-field-group mb-3">
+      <label class="form-label">詳細描述 / 備註說明：</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="formModel.description"
+        placeholder="例如: 繁體中文 (台灣地區)"
+        class="w-full p-inputtext-sm"
+      />
+    </div>
+
+    <!-- 優先順序 -->
+    <div class="form-field-group mb-3">
+      <label class="form-label">顯示順序 (Priority No)：</label>
+      <p-inputNumber
+        [(ngModel)]="formModel.priorityNo"
+        [min]="1"
+        [max]="999"
+        styleClass="w-full p-inputtext-sm"
+      ></p-inputNumber>
+    </div>
+
+    <!-- 狀態 (僅編輯模式顯示) -->
+    <div class="form-field-group mb-3" *ngIf="isEditMode">
+      <label class="form-label">啟用狀態：</label>
+      <p-dropdown
+        [options]="activeFlagOptions"
+        [(ngModel)]="formModel.activeFlag"
+        styleClass="w-full p-inputtext-sm"
+      ></p-dropdown>
+    </div>
+
+    <!-- 是否設為租戶預設語系 -->
+    <div class="form-field-group mt-2">
+      <div class="flex align-items-center">
+        <p-checkbox
+          [(ngModel)]="formModel.isDefault"
+          [binary]="true"
+          inputId="isDefaultCheck"
+        ></p-checkbox>
+        <label for="isDefaultCheck" class="ml-2 font-medium cursor-pointer">
+          <i class="pi pi-star-fill text-amber-500 mr-1"></i>設為該租戶之預設語系 (Default Locale)
+        </label>
+      </div>
+      <small class="text-gray-400 block mt-1">若勾選，將自動更新此語系為當前租戶的第一優先語系。</small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="取消"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary p-button-sm"
+      (click)="dialogVisible = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      [label]="isEditMode ? '儲存變更' : '確定新增'"
+      icon="pi pi-check"
+      class="p-button-primary p-button-sm"
+      [loading]="saving"
+      (click)="saveLocale()"
+    ></button>
+  </ng-template>
+</p-dialog>

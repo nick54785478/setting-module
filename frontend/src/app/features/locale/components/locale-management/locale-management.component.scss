@@ -1,0 +1,385 @@
+.enterprise-page {
+  padding: 1.5rem 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+
+  @media (max-width: 992px) {
+    padding: 1.25rem 1.25rem;
+  }
+
+  @media (max-width: 640px) {
+    padding: 0.75rem 0.75rem;
+  }
+
+  /* 頁面標題列 */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+
+    .header-info {
+      .page-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.35rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+
+        .title-icon {
+          color: #2563eb;
+          font-size: 1.25rem;
+        }
+
+        .page-tag {
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #2563eb;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          padding: 0.15rem 0.5rem;
+          border-radius: 4px;
+        }
+      }
+
+      .page-desc {
+        margin: 0 0 0.6rem 0;
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+
+      .header-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+
+        .info-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          font-size: 0.78rem;
+          padding: 0.25rem 0.65rem;
+          border-radius: 6px;
+          border: 1px solid transparent;
+
+          &.tenant-badge {
+            background-color: #f1f5f9;
+            color: #334155;
+            border-color: #e2e8f0;
+          }
+
+          &.count-badge {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+          }
+
+          &.in-use-pill {
+            background-color: #fffbeb;
+            color: #92400e;
+            border-color: #fde68a;
+          }
+
+          &.current-pill {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border-color: #bfdbfe;
+          }
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-shrink: 0;
+    }
+  }
+
+  /* 通用卡片外觀 */
+  .enterprise-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.25rem;
+  }
+
+  /* 快捷範本與過濾卡片 */
+  .quick-toolbar-card {
+    padding: 1.1rem 1.25rem;
+
+    .quick-templates-section {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px dashed #e2e8f0;
+      margin-bottom: 0.85rem;
+
+      .section-title {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .template-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+
+        .template-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.25rem 0.65rem;
+          background: #f8fafc;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.78rem;
+          transition: all 0.15s ease-in-out;
+          color: #334155;
+
+          .chip-code {
+            font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+            font-weight: 700;
+            color: #1e40af;
+          }
+
+          .chip-name {
+            color: #64748b;
+          }
+
+          .chip-add-icon {
+            font-size: 0.72rem;
+            color: #94a3b8;
+          }
+
+          &:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+
+            .chip-add-icon {
+              color: #2563eb;
+            }
+          }
+        }
+      }
+    }
+
+    .filter-section {
+      .filter-fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+
+        .filter-item {
+          &.search-input {
+            flex: 1;
+            min-width: 260px;
+          }
+
+          &.status-select {
+            width: 170px;
+          }
+        }
+
+        .filter-actions {
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+        }
+      }
+    }
+  }
+
+  /* 表格卡片 */
+  .table-card {
+    padding: 1.1rem 1.25rem;
+
+    .table-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+
+      .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #334155;
+        font-weight: 600;
+        font-size: 0.95rem;
+
+        .toolbar-title {
+          font-size: 0.95rem;
+        }
+
+        .record-counter {
+          font-size: 0.78rem;
+          color: #64748b;
+          background: #f1f5f9;
+          padding: 0.15rem 0.5rem;
+          border-radius: 12px;
+          font-weight: normal;
+        }
+      }
+    }
+
+    .priority-num {
+      font-size: 0.82rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .code-pill {
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #0f172a;
+      background: #f1f5f9;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .locale-name-text {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.88rem;
+    }
+
+    .locale-desc-text {
+      color: #64748b;
+      font-size: 0.84rem;
+    }
+
+    .default-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #b45309;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+    }
+
+    .in-use-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #047857;
+      background: #d1fae5;
+      border: 1px solid #a7f3d0;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+    }
+
+    .default-action-btn,
+    .apply-btn {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .row-actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+
+      .action-btn {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+
+        &.edit-btn {
+          color: #2563eb;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+
+          &:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+          }
+        }
+
+        &.delete-btn {
+          color: #ef4444;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+
+          &:hover {
+            background: #fee2e2;
+            color: #dc2626;
+          }
+
+          &:disabled {
+            color: #94a3b8;
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+
+    .empty-state-cell {
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1rem;
+      }
+    }
+  }
+}
+
+/* 對話框內部排版 */
+.dialog-content-body {
+  padding-top: 0.5rem;
+
+  .form-field-group {
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 0.35rem;
+
+      &.required::after {
+        content: ' *';
+        color: #ef4444;
+      }
+    }
+  }
+}

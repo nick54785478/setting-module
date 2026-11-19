@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-export type ActiveView = 'setting' | 'category' | 'dynamic-page' | 'dynamic-designer' | 'tenant-profile';
+export type ActiveView = 'setting' | 'category' | 'dynamic-page' | 'dynamic-designer' | 'tenant-profile' | 'locale';
 
 /**
  * 前端全域視圖導航服務 (NavigationService)

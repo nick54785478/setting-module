@@ -7,6 +7,7 @@ import { CategoryManagementComponent } from './features/category/components/cate
 import { DynamicPageComponent } from './features/dynamic-page/components/dynamic-page/dynamic-page.component';
 import { DynamicDesignerComponent } from './features/dynamic-page/components/dynamic-designer/dynamic-designer.component';
 import { TenantProfileComponent } from './features/tenant-profile/components/tenant-profile/tenant-profile.component';
+import { LocaleManagementComponent } from './features/locale/components/locale-management/locale-management.component';
 import { NavigationService, ActiveView } from './core/services/navigation.service';
 
 /**
@@ -27,7 +28,8 @@ import { NavigationService, ActiveView } from './core/services/navigation.servic
     CategoryManagementComponent,
     DynamicPageComponent,
     DynamicDesignerComponent,
-    TenantProfileComponent
+    TenantProfileComponent,
+    LocaleManagementComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

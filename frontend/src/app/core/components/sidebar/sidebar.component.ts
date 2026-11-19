@@ -78,6 +78,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
           i.active = i.view === view || ((view === 'dynamic-page' || view === 'tenant-profile') && (i.view === 'tenant-profile' || i.view === 'dynamic-page'));
         } else if (i.code === 'MENU_TENANT' && (view === 'tenant-profile' || view === 'dynamic-page')) {
           i.active = true;
+        } else if (i.code === 'MENU_LOCALE' && view === 'locale') {
+          i.active = true;
         } else {
           i.active = false;
         }
@@ -107,6 +109,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.navigationService.setView('setting');
     } else if (item.code === 'MENU_CATEGORY') {
       this.navigationService.setView('category');
+    } else if (item.code === 'MENU_LOCALE') {
+      this.navigationService.setView('locale');
     } else {
       this.menuGroups.forEach((g) => g.items.forEach((i) => (i.active = false)));
       item.active = true;
