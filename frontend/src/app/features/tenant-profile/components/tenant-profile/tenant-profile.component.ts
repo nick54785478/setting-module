@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
-import { TableModule } from 'primeng/table';
 import { PanelModule } from 'primeng/panel';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -13,10 +12,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
@@ -26,12 +22,15 @@ import { DynamicPageService } from '../../../dynamic-page/services/dynamic-page.
 import { FormField, FormFieldOption } from '../../../dynamic-page/models/form-field.model';
 
 /**
- * 租戶畫像資料管理元件 (TenantProfileComponent)
+ * 租戶畫像動態頁面元件 (TenantProfileComponent)
  * <p>
- * 遵循完整 CRUD 設計規範：
- * 1. 查詢條件區：關鍵字搜尋與方案等級過濾，支援即時查出資料。
- * 2. 清單表格區：列出目前已建檔之租戶畫像資料，每列皆有「編輯 (查出資料回填)」、「檢視」與「刪除」。
- * 3. 動態表單 Dialog：依據 TENANT_PROFILE_SCHEMA 自動生成，點擊「新增」或「編輯」時彈出並支援驗證與保存。
+ * 核心功能：
+ * 1. 直接根據 Schema 架構 (TENANT_PROFILE_SCHEMA) 在頁面上動態渲染完整的 UI 表單。
+ * 2. 查出回填編輯 (Query & In-place Edit)：
+ *    - 頁面載入時自動從後端查出當前租戶已儲存之畫像資料並直接回填於表單中供即時編輯。
+ *    - 支援頂部「查詢/切換租戶」工具列，輸入或選擇租戶代碼後點擊「查出資料」，立即從後端載入該租戶內容至表單。
+ * 3. 儲存與重設：使用者在頁面上直接修改欄位後點選「儲存畫像設定」，直接持久化至後端並提示成功。
+ * 4. 支援「修改欄位結構 (Designer)」一鍵跳轉至設計器調整動態欄位。
  * </p>
  */
 @Component({
@@ -41,7 +40,6 @@ import { FormField, FormFieldOption } from '../../../dynamic-page/models/form-fi
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    TableModule,
     PanelModule,
     InputTextModule,
     InputNumberModule,
@@ -51,10 +49,7 @@ import { FormField, FormFieldOption } from '../../../dynamic-page/models/form-fi
     InputTextarea,
     ButtonModule,
     ToastModule,
-    CardModule,
-    TagModule,
     TooltipModule,
-    DialogModule,
     ConfirmDialogModule
   ],
   providers: [MessageService, ConfirmationService],
@@ -66,36 +61,27 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
   public readonly pageCode: string = 'TENANT_PROFILE';
   public readonly schemaCode: string = 'TENANT_PROFILE_SCHEMA';
 
-  // 動態 Schema 欄位
+  // 查詢與租戶切換
+  public queryTenant: string = 'CW';
+  public readonly availableTenants = [
+    { label: '預設基準租戶 (CW)', value: 'CW' },
+    { label: '國泰金融租戶 (CTBC)', value: 'CTBC' },
+    { label: '北美企業租戶 (ACME)', value: 'ACME' },
+    { label: '示範測試租戶 (DEMO)', value: 'DEMO' }
+  ];
+
+  // 動態 Schema 欄位與表單模型
   public formFields: FormField[] = [];
   public formGroup: FormGroup = new FormGroup({});
 
-  // 查詢條件模型
-  public searchKeyword: string = '';
-  public selectedTier: string = 'ALL';
-  public readonly tierFilterOptions = [
-    { label: '全部方案等級', value: 'ALL' },
-    { label: '標準版 (STANDARD)', value: 'STANDARD' },
-    { label: '企業版 (ENTERPRISE)', value: 'ENTERPRISE' },
-    { label: '旗艦版 (ULTIMATE)', value: 'ULTIMATE' }
-  ];
-
-  // 資料列表狀態
-  public allRecords: any[] = [];
-  public filteredRecords: any[] = [];
+  // 狀態旗標
   public loading: boolean = false;
   public saving: boolean = false;
-
-  // 動態表單 Dialog 狀態 (新增 / 編輯)
-  public formDialogVisible: boolean = false;
-  public isEditMode: boolean = false;
-  public currentEditingIndex: number = -1;
   public submitted: boolean = false;
+  public lastLoadedData: any = null;
+  public isLivePreviewCollapsed: boolean = false;
 
-  // 詳情檢視 Dialog 狀態
-  public viewDialogVisible: boolean = false;
-  public selectedRecordForView: any = null;
-
+  // AutoComplete 建議項目暫存清單
   public allSuggestions: FormFieldOption[] = [];
 
   private tenantSub!: Subscription;
@@ -111,12 +97,17 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.currentTenant = this.tenantService.getCurrentTenant();
+    this.currentTenant = this.tenantService.getCurrentTenant() || 'CW';
+    this.queryTenant = this.currentTenant;
 
+    // 訂閱全域租戶變更
     this.tenantSub = this.tenantService.tenant$.subscribe((tenant) => {
       this.currentTenant = tenant;
-      this.loadTenantProfile();
+      this.queryTenant = tenant;
+      this.loadPageAndQueryData();
     });
+
+    this.loadPageAndQueryData();
   }
 
   ngOnDestroy(): void {
@@ -126,34 +117,28 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 載入當前租戶之 TENANT_PROFILE_SCHEMA 結構與資料清單
+   * 載入動態 Schema 架構，並自動查出該租戶已儲存之資料進行回填 (查出來編輯)
    */
-  public loadTenantProfile(): void {
+  public loadPageAndQueryData(): void {
     this.loading = true;
+    this.submitted = false;
 
-    // 1. 取得後端 TENANT_PROFILE_SCHEMA
-    this.dynamicPageService.getPageSchema(this.pageCode, this.currentTenant).subscribe({
+    // 1. 取得動態頁面 Schema (欄位定義)
+    this.dynamicPageService.getPageSchema(this.schemaCode, this.queryTenant).subscribe({
       next: (fields) => {
-        this.formFields = fields || [];
-        this.buildFormControls(this.formFields);
+        this.formFields = fields;
+        this.buildFormControls(fields);
 
-        // 2. 查出後端已儲存的租戶資料列表
-        this.dynamicPageService.getPageRecords(this.pageCode, this.currentTenant).subscribe({
-          next: (records) => {
-            this.allRecords = records || [];
-            this.applyFilter();
-            this.loading = false;
-            this.cdr.markForCheck();
-          },
-          error: (err) => {
-            console.error('Failed to load records', err);
-            this.loading = false;
-            this.cdr.markForCheck();
-          }
-        });
+        // 2. 查出指定租戶已儲存的表單資料 (查出來回填)
+        this.queryTenantProfileData();
       },
       error: (err) => {
-        console.error('Failed to load schema', err);
+        console.error('Failed to load page schema', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: '載入結構失敗',
+          detail: '無法取得 TENANT_PROFILE_SCHEMA 動態欄位結構'
+        });
         this.loading = false;
         this.cdr.markForCheck();
       }
@@ -161,169 +146,50 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 執行查詢過濾
+   * 查出指定租戶的資料並回填到表單中
    */
-  public onSearch(): void {
-    this.applyFilter();
-    this.messageService.add({
-      severity: 'info',
-      summary: '查詢完成',
-      detail: `共查出 ${this.filteredRecords.length} 筆租戶畫像資料`
-    });
-  }
+  public queryTenantProfileData(): void {
+    this.loading = true;
+    const targetTenant = this.queryTenant?.trim() || this.currentTenant;
 
-  /**
-   * 重設查詢條件
-   */
-  public onReset(): void {
-    this.searchKeyword = '';
-    this.selectedTier = 'ALL';
-    this.applyFilter();
-  }
-
-  private applyFilter(): void {
-    let result = [...this.allRecords];
-
-    if (this.searchKeyword && this.searchKeyword.trim()) {
-      const kw = this.searchKeyword.trim().toLowerCase();
-      result = result.filter((r) => {
-        const code = String(r.tenantCode || '').toLowerCase();
-        const name = String(r.tenantName || '').toLowerCase();
-        const email = String(r.contactEmail || '').toLowerCase();
-        return code.includes(kw) || name.includes(kw) || email.includes(kw);
-      });
-    }
-
-    if (this.selectedTier && this.selectedTier !== 'ALL') {
-      result = result.filter((r) => r.tier === this.selectedTier);
-    }
-
-    this.filteredRecords = result;
-  }
-
-  /**
-   * 開啟新增對話框
-   */
-  public openCreateDialog(): void {
-    this.isEditMode = false;
-    this.currentEditingIndex = -1;
-    this.submitted = false;
-    this.formGroup.reset();
-
-    // 賦予預設值
-    this.formGroup.patchValue({
-      tenantCode: this.currentTenant,
-      tier: 'STANDARD',
-      maxUsers: 100
-    });
-
-    this.formDialogVisible = true;
-  }
-
-  /**
-   * 查出特定資料並開啟編輯對話框 (核心：查出來編輯)
-   */
-  public openEditDialog(record: any, index: number): void {
-    this.isEditMode = true;
-    this.currentEditingIndex = index;
-    this.submitted = false;
-
-    // 將該筆查出的資料完整回填至動態生成之 Form 控制項
-    this.formGroup.patchValue(record);
-    this.formDialogVisible = true;
-
-    this.messageService.add({
-      severity: 'info',
-      summary: '已查出資料進行編輯',
-      detail: `已載入租戶 [${record.tenantName || record.tenantCode}] 之完整畫像資料`
-    });
-  }
-
-  /**
-   * 檢視詳細資料
-   */
-  public openViewDialog(record: any): void {
-    this.selectedRecordForView = record;
-    this.viewDialogVisible = true;
-  }
-
-  /**
-   * 儲存動態表單資料 (新增或更新)
-   */
-  public saveFormDialog(): void {
-    this.submitted = true;
-    if (this.formGroup.invalid) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: '表單驗證未通過',
-        detail: '請檢查並填寫所有必填欄位或修正格式錯誤！'
-      });
-      return;
-    }
-
-    this.saving = true;
-    const formValue = this.formGroup.value;
-
-    if (this.isEditMode && this.currentEditingIndex >= 0) {
-      this.allRecords[this.currentEditingIndex] = { ...this.allRecords[this.currentEditingIndex], ...formValue };
-    } else {
-      this.allRecords.unshift(formValue);
-    }
-
-    this.dynamicPageService.savePageRecords(this.pageCode, this.allRecords, this.currentTenant).subscribe({
-      next: () => {
-        this.saving = false;
-        this.formDialogVisible = false;
-        this.applyFilter();
-        this.messageService.add({
-          severity: 'success',
-          summary: '儲存成功',
-          detail: `租戶 [${formValue.tenantName || formValue.tenantCode}] 資料已更新保存！`
-        });
+    this.dynamicPageService.getPageData(this.pageCode, targetTenant).subscribe({
+      next: (data) => {
+        this.loading = false;
+        if (data && Object.keys(data).length > 0) {
+          this.lastLoadedData = { ...data };
+          this.formGroup.patchValue(data);
+          this.messageService.add({
+            severity: 'info',
+            summary: '資料查出成功',
+            detail: `已成功查出租戶 [${targetTenant}] 之畫像資料並回填至表單`
+          });
+        } else {
+          // 若無資料，以初始預設值填入基本欄位
+          const defaultData = {
+            tenantCode: targetTenant,
+            tenantName: targetTenant === 'CW' ? '國泰世華銀行總行' : `客製租戶空間 (${targetTenant})`,
+            contactEmail: targetTenant === 'CW' ? 'admin@cw.com' : `admin@${targetTenant.toLowerCase()}.com`,
+            maxUsers: 500,
+            tier: 'ENTERPRISE',
+            contractExpiry: '2027-12-31',
+            dataRegion: 'TW-TPE-1',
+            remarks: '核心商業租戶，支援高可用性與多可用區數據隔離。'
+          };
+          this.lastLoadedData = { ...defaultData };
+          this.formGroup.patchValue(defaultData);
+        }
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.saving = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: '儲存失敗',
-          detail: '無法保存資料，請確認後端連線或欄位長度。'
-        });
+        console.error('Failed to query tenant profile data', err);
+        this.loading = false;
         this.cdr.markForCheck();
       }
     });
   }
 
   /**
-   * 刪除資料紀錄
-   */
-  public confirmDelete(record: any, index: number): void {
-    this.confirmationService.confirm({
-      message: `確認要刪除租戶「${record.tenantName || record.tenantCode}」的畫像資料嗎？`,
-      header: '刪除確認',
-      icon: 'pi pi-trash',
-      acceptLabel: '確定刪除',
-      rejectLabel: '取消',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        this.allRecords.splice(index, 1);
-        this.dynamicPageService.savePageRecords(this.pageCode, this.allRecords, this.currentTenant).subscribe({
-          next: () => {
-            this.applyFilter();
-            this.messageService.add({
-              severity: 'info',
-              summary: '已刪除資料',
-              detail: `已移除「${record.tenantName || record.tenantCode}」`
-            });
-            this.cdr.markForCheck();
-          }
-        });
-      }
-    });
-  }
-
-  /**
-   * 動態建構 FormGroup 與 Validators
+   * 依據 Schema 欄位清單動態建構 Reactive FormControls
    */
   private buildFormControls(fields: FormField[]): void {
     const controls: Record<string, any> = {};
@@ -336,42 +202,131 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
     this.formGroup = this.fb.group(controls);
   }
 
+  /**
+   * 轉換欄位驗證設定為 Angular Validators
+   */
   private getValidators(validators: string[]) {
     const formValidators = [];
-    if (validators.includes('required')) formValidators.push(Validators.required);
-    if (validators.includes('email')) formValidators.push(Validators.email);
-    if (validators.includes('requiredTrue')) formValidators.push(Validators.requiredTrue);
+    if (validators.includes('required')) {
+      formValidators.push(Validators.required);
+    }
+    if (validators.includes('email')) {
+      formValidators.push(Validators.email);
+    }
     return formValidators;
   }
 
-  public formControl(name: string) {
-    return this.formGroup.get(name);
-  }
+  /**
+   * 儲存表單資料至後端
+   */
+  public onSubmit(): void {
+    this.submitted = true;
 
-  public formControlInvalid(name: string): boolean {
-    const control = this.formGroup.get(name);
-    return Boolean(control && control.invalid && (control.dirty || control.touched || this.submitted));
-  }
+    if (this.formGroup.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: '表單驗證未通過',
+        detail: '請檢查紅框標記之必填欄位或格式錯誤後再儲存'
+      });
+      return;
+    }
 
-  public search(event: any, uri?: string): void {
-    this.dynamicPageService.searchAutoComplete(event.query, uri || '').subscribe({
-      next: (suggestions) => {
-        this.allSuggestions = suggestions;
+    this.saving = true;
+    const targetTenant = this.queryTenant?.trim() || this.currentTenant;
+    const formData = this.formGroup.value;
+
+    this.dynamicPageService.savePageData(this.pageCode, formData, targetTenant).subscribe({
+      next: () => {
+        this.saving = false;
+        this.lastLoadedData = { ...formData };
+        this.messageService.add({
+          severity: 'success',
+          summary: '儲存成功',
+          detail: `租戶 [${targetTenant}] 之畫像資料已成功儲存並同步持久化！`
+        });
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.saving = false;
+        console.error('Failed to save tenant profile data', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: '儲存失敗',
+          detail: '無法寫入租戶畫像資料，請確認後端服務正常運作'
+        });
         this.cdr.markForCheck();
       }
     });
   }
 
+  /**
+   * 重設還原為當前查出之資料
+   */
+  public resetToLoadedData(): void {
+    if (this.lastLoadedData) {
+      this.formGroup.patchValue(this.lastLoadedData);
+      this.messageService.add({
+        severity: 'info',
+        summary: '已還原',
+        detail: '表單已恢復為最後查出之數值'
+      });
+    } else {
+      this.formGroup.reset();
+    }
+  }
+
+  /**
+   * 開新填寫空白表單
+   */
+  public startNewProfile(): void {
+    this.formGroup.reset({
+      tenantCode: this.queryTenant,
+      maxUsers: 100,
+      tier: 'STANDARD'
+    });
+    this.messageService.add({
+      severity: 'info',
+      summary: '空白表單已備妥',
+      detail: '您現在可以直接輸入全新租戶畫像資料'
+    });
+  }
+
+  /**
+   * 跳轉前往「動態表單架構設計器 (Schema Designer)」
+   */
   public goToSchemaDesigner(): void {
     this.navigationService.setView('dynamic-designer');
   }
 
-  public getTierBadgeSeverity(tier: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | undefined {
-    switch (tier) {
-      case 'ULTIMATE': return 'danger';
-      case 'ENTERPRISE': return 'success';
-      case 'STANDARD': return 'info';
-      default: return 'secondary';
-    }
+  /**
+   * 切換底部即時 JSON Inspector 展開/收合
+   */
+  public toggleLivePreview(): void {
+    this.isLivePreviewCollapsed = !this.isLivePreviewCollapsed;
+  }
+
+  /**
+   * 自動完成建議搜尋 (AutoComplete)
+   */
+  public searchSuggestions(event: { query: string }, uri?: string): void {
+    const keyword = event.query || '';
+    this.dynamicPageService.searchAutoComplete(uri || 'regions', keyword).subscribe({
+      next: (options) => {
+        this.allSuggestions = options;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.allSuggestions = [];
+      }
+    });
+  }
+
+  public formControl(fieldName: string) {
+    return this.formGroup.get(fieldName);
+  }
+
+  public formControlInvalid(fieldName: string): boolean {
+    const control = this.formGroup.get(fieldName);
+    return !!(control && control.invalid && (control.dirty || control.touched || this.submitted));
   }
 }

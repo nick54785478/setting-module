@@ -7,7 +7,7 @@
     <div class="header-title-row">
       <div class="title-with-badge">
         <i class="pi pi-building text-primary text-2xl mr-2"></i>
-        <h2>租戶畫像資料中心 (Tenant Profile)</h2>
+        <h2>租戶畫像資料 (Tenant Profile)</h2>
         <span class="tenant-badge">
           <i class="pi pi-shield mr-1"></i>當前租戶：{{ currentTenant }}
         </span>
@@ -24,402 +24,264 @@
           pButton
           type="button"
           icon="pi pi-pencil"
-          label="修改欄位結構 (Designer)"
+          label="自訂表單設計 (Designer)"
           class="p-button-outlined p-button-sm mr-2"
           (click)="goToSchemaDesigner()"
         ></button>
         <button
           pButton
           type="button"
-          icon="pi pi-plus"
-          label="新增租戶畫像"
-          class="p-button-primary p-button-sm"
-          (click)="openCreateDialog()"
+          icon="pi pi-refresh"
+          label="重新整理"
+          class="p-button-outlined p-button-secondary p-button-sm"
+          [loading]="loading"
+          (click)="loadPageAndQueryData()"
         ></button>
       </div>
     </div>
     <p class="subtitle">
-      依據 <code>TENANT_PROFILE_SCHEMA</code> 動態結構提供資料查詢、清單管理與回填編輯。點選列表中任一筆的「編輯」即可查出資料進入動態表單進行修改。
+      本頁面依據 <code>TENANT_PROFILE_SCHEMA</code> 動態結構自動生成對應之 UI 欄位，支援查出指定租戶資料後直接於畫面中回填編輯與保存。
     </p>
   </div>
 
-  <!-- 查詢過濾條件卡片 (Search & Filter Section) -->
-  <div class="search-card mb-3">
-    <div class="search-form-grid">
-      <div class="search-item">
-        <label class="search-label">關鍵字搜尋 (代碼 / 名稱 / 信箱)</label>
-        <span class="p-input-icon-left w-full">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="searchKeyword"
-            (keyup.enter)="onSearch()"
-            placeholder="請輸入關鍵字，按 Enter 搜尋..."
-            class="w-full p-inputtext-sm"
-          />
-        </span>
-      </div>
-
-      <div class="search-item">
-        <label class="search-label">租戶方案等級 (Tier)</label>
-        <p-dropdown
-          [options]="tierFilterOptions"
-          [(ngModel)]="selectedTier"
-          (onChange)="onSearch()"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full p-inputtext-sm"
-        ></p-dropdown>
-      </div>
-
-      <div class="search-actions">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-search"
-          label="查詢"
-          class="p-button-primary p-button-sm mr-2"
-          (click)="onSearch()"
-        ></button>
-        <button
-          pButton
-          type="button"
-          icon="pi pi-undo"
-          label="重設"
-          class="p-button-outlined p-button-secondary p-button-sm"
-          (click)="onReset()"
-        ></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 資料清單表格卡片 (Data Table) -->
-  <div class="table-card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="font-bold text-gray-800 text-lg">
-          <i class="pi pi-list mr-2 text-primary"></i>租戶畫像資料列表 (共 {{ filteredRecords.length }} 筆)
-        </span>
-      </div>
-      <div class="toolbar-right">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-refresh"
-          class="p-button-text p-button-rounded p-button-sm"
-          [loading]="loading"
-          pTooltip="重新整理"
-          (click)="loadTenantProfile()"
-        ></button>
-      </div>
-    </div>
-
-    <p-table
-      [value]="filteredRecords"
-      [loading]="loading"
-      responsiveLayout="scroll"
-      styleClass="p-datatable-gridlines p-datatable-sm"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 60px" class="text-center">#</th>
-          <th style="width: 120px">租戶代碼</th>
-          <th style="width: 180px">租戶名稱</th>
-          <th style="width: 200px">管理員信箱</th>
-          <th style="width: 130px" class="text-center">合約方案</th>
-          <th style="width: 110px" class="text-center">授權人數</th>
-          <th style="width: 130px" class="text-center">合約到期日</th>
-          <th>託管區域 / 備註</th>
-          <th style="width: 160px" class="text-center">維護操作</th>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="body" let-record let-i="rowIndex">
-        <tr>
-          <!-- 順序 -->
-          <td class="text-center font-bold text-gray-500">{{ i + 1 }}</td>
-
-          <!-- 代碼 -->
-          <td>
-            <code class="code-pill">{{ record.tenantCode }}</code>
-          </td>
-
-          <!-- 名稱 -->
-          <td class="font-medium text-gray-800">{{ record.tenantName }}</td>
-
-          <!-- 信箱 -->
-          <td>{{ record.contactEmail || '-' }}</td>
-
-          <!-- 方案 -->
-          <td class="text-center">
-            <p-tag
-              [value]="record.tier || 'STANDARD'"
-              [severity]="getTierBadgeSeverity(record.tier)"
-              [rounded]="true"
-            ></p-tag>
-          </td>
-
-          <!-- 授權人數 -->
-          <td class="text-center font-semibold">{{ record.maxUsers || 0 }} 人</td>
-
-          <!-- 到期日 -->
-          <td class="text-center text-sm">{{ record.contractExpiry || '-' }}</td>
-
-          <!-- 區域 / 備註 -->
-          <td class="text-sm">
-            <span *ngIf="record.dataRegion" class="region-badge mr-2">
-              <i class="pi pi-map-marker mr-1"></i>{{ record.dataRegion }}
-            </span>
-            <span class="text-gray-500">{{ record.remarks || '' }}</span>
-          </td>
-
-          <!-- 操作：檢視、查出來編輯、刪除 -->
-          <td class="text-center">
-            <div class="row-actions">
-              <button
-                pButton
-                type="button"
-                icon="pi pi-eye"
-                class="p-button-text p-button-sm p-button-secondary action-btn"
-                pTooltip="檢視詳情"
-                (click)="openViewDialog(record)"
-              ></button>
-              <button
-                pButton
-                type="button"
-                icon="pi pi-pencil"
-                class="p-button-text p-button-sm p-button-primary action-btn"
-                pTooltip="查出並編輯"
-                (click)="openEditDialog(record, i)"
-              ></button>
-              <button
-                pButton
-                type="button"
-                icon="pi pi-trash"
-                class="p-button-text p-button-sm p-button-danger action-btn"
-                pTooltip="刪除紀錄"
-                (click)="confirmDelete(record, i)"
-              ></button>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="9" class="text-center py-5 text-gray-500">
-            查無匹配之租戶畫像資料，請點擊上方「新增租戶畫像」開始填寫。
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
-</div>
-
-<!-- 動態表單彈窗對話框 (Dialog - 新增 / 編輯) -->
-<p-dialog
-  [(visible)]="formDialogVisible"
-  [header]="isEditMode ? '編輯租戶畫像資料 (查出回填)' : '新增租戶畫像資料'"
-  [modal]="true"
-  [style]="{ width: '780px' }"
-  [draggable]="false"
-  [resizable]="false"
->
-  <form [formGroup]="formGroup" class="pt-2">
-    <div class="grid-form">
-      <ng-container *ngFor="let field of formFields">
-        <div
-          class="form-field-item"
-          [ngClass]="{
-            'col-span-full': field.type === 'textarea',
-            'col-span-half': field.type !== 'textarea'
-          }"
-        >
-          <ng-container [ngSwitch]="field.type">
-            <label
-              class="field-label"
-              [ngClass]="{ 'required-label': field.validators.includes('required') }"
-            >
-              {{ field.label }}
-              <span *ngIf="field.validators.includes('required')" class="asterisk">*</span>
-              <span class="field-code">({{ field.name }})</span>
-            </label>
-
-            <!-- Text Input -->
-            <ng-container *ngSwitchCase="'text'">
-              <input
-                type="text"
-                pInputText
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                class="w-full"
-              />
-            </ng-container>
-
-            <!-- Number Input -->
-            <ng-container *ngSwitchCase="'number'">
-              <p-inputNumber
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                styleClass="w-full"
-              ></p-inputNumber>
-            </ng-container>
-
-            <!-- Email Input -->
-            <ng-container *ngSwitchCase="'email'">
-              <input
-                type="email"
-                pInputText
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                class="w-full"
-              />
-            </ng-container>
-
-            <!-- Time Input -->
-            <ng-container *ngSwitchCase="'time'">
-              <input
-                type="time"
-                pInputText
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                class="w-full"
-              />
-            </ng-container>
-
-            <!-- Dropdown Input -->
-            <ng-container *ngSwitchCase="'dropdown'">
-              <p-dropdown
-                [options]="field.options || []"
-                optionLabel="label"
-                optionValue="value"
-                [placeholder]="field.placeholder || '請選擇'"
-                [filter]="true"
-                filterBy="label,value"
-                [showClear]="true"
-                appendTo="body"
-                [formControlName]="field.name"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                styleClass="w-full"
-              ></p-dropdown>
-            </ng-container>
-
-            <!-- Calendar Input -->
-            <ng-container *ngSwitchCase="'calendar'">
-              <p-calendar
-                [showIcon]="true"
-                appendTo="body"
-                [formControlName]="field.name"
-                [dateFormat]="field.pattern || 'yy-mm-dd'"
-                dataType="string"
-                [placeholder]="field.placeholder || 'yy-mm-dd'"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                styleClass="w-full"
-              ></p-calendar>
-            </ng-container>
-
-            <!-- AutoComplete Input -->
-            <ng-container *ngSwitchCase="'autocomplete'">
-              <p-autoComplete
-                [suggestions]="allSuggestions"
-                (completeMethod)="search($event, field.uri)"
-                [forceSelection]="false"
-                appendTo="body"
-                [dropdown]="true"
-                [completeOnFocus]="true"
-                [placeholder]="field.placeholder || '輸入關鍵字搜尋...'"
-                emptyMessage="查無匹配資料"
-                field="label"
-                [formControlName]="field.name"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                styleClass="w-full"
-              >
-                <ng-template let-data pTemplate="item">
-                  <div class="suggestion-item">
-                    <span class="suggestion-label">{{ data.label }}</span>
-                    <span class="suggestion-value">({{ data.value }})</span>
-                  </div>
-                </ng-template>
-              </p-autoComplete>
-            </ng-container>
-
-            <!-- Textarea Input -->
-            <ng-container *ngSwitchCase="'textarea'">
-              <textarea
-                [formControlName]="field.name"
-                [rows]="field.rows || 3"
-                [cols]="field.cols || 30"
-                pInputTextarea
-                [autoResize]="true"
-                [placeholder]="field.placeholder || ''"
-                [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
-                class="w-full"
-              ></textarea>
-            </ng-container>
-
-            <!-- 驗證錯誤訊息提示 -->
-            <div *ngIf="formControlInvalid(field.name)" class="error-container">
-              <small class="error-msg" *ngIf="formControl(field.name)?.errors?.['required']">
-                <i class="pi pi-exclamation-circle mr-1"></i>此欄位為必填項目
-              </small>
-              <small class="error-msg" *ngIf="formControl(field.name)?.errors?.['email']">
-                <i class="pi pi-exclamation-circle mr-1"></i>電子信箱格式不正確
-              </small>
-            </div>
-          </ng-container>
+  <!-- 查出資料與租戶切換工具列 (Query & Load Toolbar) -->
+  <div class="query-toolbar-card mb-3">
+    <div class="query-form-row">
+      <div class="query-field">
+        <label class="query-label">
+          <i class="pi pi-search mr-1 text-primary"></i>查出指定租戶畫像資料 (Tenant Code)：
+        </label>
+        <div class="query-input-group">
+          <p-dropdown
+            [options]="availableTenants"
+            [(ngModel)]="queryTenant"
+            [editable]="true"
+            placeholder="請選擇或自訂輸入租戶代碼 (例如: CW, ACME)..."
+            styleClass="query-dropdown"
+          ></p-dropdown>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-search"
+            label="查出資料"
+            class="p-button-primary p-button-sm ml-2"
+            [loading]="loading"
+            (click)="queryTenantProfileData()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-plus"
+            label="開新填寫"
+            class="p-button-outlined p-button-secondary p-button-sm ml-2"
+            pTooltip="清空欄位以建立新租戶畫像"
+            (click)="startNewProfile()"
+          ></button>
         </div>
-      </ng-container>
+      </div>
     </div>
+  </div>
+
+  <!-- 動態生成之 UI 表單主體 (直接依據 Schema 長出元件) -->
+  <form [formGroup]="formGroup" class="form-wrapper">
+    <p-panel [toggleable]="false">
+      <ng-template pTemplate="header">
+        <div class="panel-header-content">
+          <div class="panel-title">
+            <i class="pi pi-sliders-h mr-2 text-primary"></i>
+            <span>動態表單內容維護 (受選租戶：<span class="text-blue-600 font-bold">{{ queryTenant }}</span>)</span>
+          </div>
+          <span class="panel-tag">
+            <i class="pi pi-database mr-1"></i>動態資料空間
+          </span>
+        </div>
+      </ng-template>
+
+      <div class="grid-form">
+        <ng-container *ngFor="let field of formFields">
+          <div
+            class="form-field-item"
+            [ngClass]="{
+              'col-span-full': field.type === 'textarea',
+              'col-span-half': field.type !== 'textarea'
+            }"
+          >
+            <ng-container [ngSwitch]="field.type">
+              <label
+                class="field-label"
+                [ngClass]="{ 'required-label': field.validators.includes('required') }"
+              >
+                {{ field.label }}
+                <span *ngIf="field.validators.includes('required')" class="asterisk">*</span>
+                <span class="field-code">({{ field.name }})</span>
+              </label>
+
+              <!-- Text Input -->
+              <ng-container *ngSwitchCase="'text'">
+                <input
+                  type="text"
+                  pInputText
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                />
+              </ng-container>
+
+              <!-- Number Input -->
+              <ng-container *ngSwitchCase="'number'">
+                <p-inputNumber
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                ></p-inputNumber>
+              </ng-container>
+
+              <!-- Email Input -->
+              <ng-container *ngSwitchCase="'email'">
+                <input
+                  type="email"
+                  pInputText
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                />
+              </ng-container>
+
+              <!-- Time Input -->
+              <ng-container *ngSwitchCase="'time'">
+                <input
+                  type="time"
+                  pInputText
+                  [formControlName]="field.name"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                />
+              </ng-container>
+
+              <!-- Dropdown Input -->
+              <ng-container *ngSwitchCase="'dropdown'">
+                <p-dropdown
+                  [options]="field.options || []"
+                  optionLabel="label"
+                  optionValue="value"
+                  [placeholder]="field.placeholder || '請選擇'"
+                  [filter]="true"
+                  filterBy="label,value"
+                  [showClear]="!field.validators.includes('required')"
+                  [formControlName]="field.name"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                ></p-dropdown>
+              </ng-container>
+
+              <!-- Calendar Input -->
+              <ng-container *ngSwitchCase="'calendar'">
+                <p-calendar
+                  [formControlName]="field.name"
+                  [dateFormat]="field.pattern || 'yy-mm-dd'"
+                  [placeholder]="field.placeholder || '請選擇日期 (yyyy-mm-dd)'"
+                  [showIcon]="true"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                ></p-calendar>
+              </ng-container>
+
+              <!-- AutoComplete Input -->
+              <ng-container *ngSwitchCase="'autocomplete'">
+                <p-autoComplete
+                  [suggestions]="allSuggestions"
+                  (completeMethod)="searchSuggestions($event, field.uri)"
+                  [forceSelection]="false"
+                  appendTo="body"
+                  [dropdown]="true"
+                  [completeOnFocus]="true"
+                  [placeholder]="field.placeholder || '輸入關鍵字搜尋...'"
+                  emptyMessage="查無匹配資料"
+                  field="label"
+                  [formControlName]="field.name"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  styleClass="w-full"
+                >
+                  <ng-template let-data pTemplate="item">
+                    <div class="suggestion-item">
+                      <span class="suggestion-label">{{ data.label }}</span>
+                      <span class="suggestion-value">({{ data.value }})</span>
+                    </div>
+                  </ng-template>
+                </p-autoComplete>
+              </ng-container>
+
+              <!-- Textarea Input -->
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea
+                  [formControlName]="field.name"
+                  [rows]="field.rows || 3"
+                  [cols]="field.cols || 30"
+                  pInputTextarea
+                  [autoResize]="true"
+                  [placeholder]="field.placeholder || ''"
+                  [ngClass]="{ 'ng-invalid ng-dirty': formControlInvalid(field.name) }"
+                  class="w-full"
+                ></textarea>
+              </ng-container>
+
+              <!-- 驗證錯誤訊息提示 -->
+              <div *ngIf="formControlInvalid(field.name)" class="error-container">
+                <small class="error-msg" *ngIf="formControl(field.name)?.errors?.['required']">
+                  <i class="pi pi-exclamation-circle mr-1"></i>此欄位為必填項目
+                </small>
+                <small class="error-msg" *ngIf="formControl(field.name)?.errors?.['email']">
+                  <i class="pi pi-exclamation-circle mr-1"></i>電子信箱格式不正確
+                </small>
+              </div>
+            </ng-container>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- 表單底部操作按鈕區 -->
+      <div class="actions-row">
+        <button
+          type="button"
+          pButton
+          label="儲存畫像設定"
+          icon="pi pi-check"
+          class="p-button-primary mr-3"
+          [loading]="saving"
+          (click)="onSubmit()"
+        ></button>
+        <button
+          type="button"
+          pButton
+          label="還原查出值"
+          icon="pi pi-undo"
+          class="p-button-outlined p-button-secondary"
+          (click)="resetToLoadedData()"
+        ></button>
+      </div>
+    </p-panel>
   </form>
 
-  <ng-template pTemplate="footer">
-    <button
-      pButton
-      type="button"
-      label="取消"
-      icon="pi pi-times"
-      class="p-button-text p-button-secondary"
-      (click)="formDialogVisible = false"
-    ></button>
-    <button
-      pButton
-      type="button"
-      [label]="isEditMode ? '儲存修改' : '確認新增'"
-      icon="pi pi-check"
-      class="p-button-primary"
-      [loading]="saving"
-      (click)="saveFormDialog()"
-    ></button>
-  </ng-template>
-</p-dialog>
-
-<!-- 詳細資料檢視 Dialog -->
-<p-dialog
-  [(visible)]="viewDialogVisible"
-  header="租戶畫像詳細資料"
-  [modal]="true"
-  [style]="{ width: '600px' }"
-  [draggable]="false"
-  [resizable]="false"
->
-  <div class="json-inspector-box p-3 bg-gray-900 border-round text-white">
-    <pre class="m-0 text-cyan-400 font-mono text-sm" style="max-height: 350px; overflow-y: auto;">
-{{ selectedRecordForView | json }}
-    </pre>
+  <!-- 即時 JSON 預覽卡片 (可收合/展開) -->
+  <div class="preview-card mt-4">
+    <div class="preview-header" (click)="toggleLivePreview()" pTooltip="點擊以收合/展開即時資料預覽">
+      <div class="preview-title">
+        <span class="code-icon-badge mr-2">
+          <i class="pi pi-code"></i>
+        </span>
+        <span class="preview-title-text">即時資料預覽 (Live Data Inspector) - 租戶：{{ queryTenant }}</span>
+      </div>
+      <div class="preview-header-right">
+        <span class="preview-badge mr-2">純 JSON 聚合資料</span>
+        <i class="pi" [ngClass]="isLivePreviewCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'"></i>
+      </div>
+    </div>
+    <div class="preview-body" *ngIf="!isLivePreviewCollapsed">
+      <pre>{{ formGroup.value | json }}</pre>
+    </div>
   </div>
-  <ng-template pTemplate="footer">
-    <button
-      pButton
-      type="button"
-      label="關閉"
-      icon="pi pi-times"
-      class="p-button-text"
-      (click)="viewDialogVisible = false"
-    ></button>
-  </ng-template>
-</p-dialog>
+</div>
