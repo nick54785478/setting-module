@@ -4,6 +4,7 @@ import com.module.setting.application.port.in.CreateCategoryUseCase;
 import com.module.setting.application.port.in.DeleteCategoryUseCase;
 import com.module.setting.application.port.in.GetCategoryUseCase;
 import com.module.setting.application.port.in.UpdateCategoryUseCase;
+import com.module.setting.application.port.out.SettingCategoryRepositoryPort;
 import com.module.setting.application.shared.command.CreateCategoryCommand;
 import com.module.setting.application.shared.command.UpdateCategoryCommand;
 import com.module.setting.application.shared.context.UserContextHolder;
@@ -11,8 +12,6 @@ import com.module.setting.application.shared.result.CategoryCreatedResult;
 import com.module.setting.application.shared.result.CategoryGottenResult;
 import com.module.setting.application.shared.result.CategoryUpdatedResult;
 import com.module.setting.application.shared.vo.YesNo;
-import com.module.setting.infrastructure.persistence.category.entity.SettingCategory;
-import com.module.setting.infrastructure.persistence.category.repository.SettingCategoryJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +20,11 @@ import java.util.List;
 
 /**
  * 維度元資料領域應用服務 (SettingCategoryApplicationService)
+ * <p>
+ * 實作維度字典之查詢、新增、修改與刪除業務合約。
+ * 遵循 Clean Architecture 依賴反轉原則 (DIP)，僅依賴 SettingCategoryRepositoryPort，
+ * 嚴禁直接引用 Infrastructure 層之 JPA Entity 或技術實作。
+ * </p>
  */
 @Service
 @RequiredArgsConstructor
@@ -31,31 +35,26 @@ public class SettingCategoryApplicationService implements
         UpdateCategoryUseCase,
         DeleteCategoryUseCase {
 
-    private final SettingCategoryJpaRepository categoryJpaRepository;
+    private final SettingCategoryRepositoryPort categoryRepositoryPort;
 
     @Override
     @Transactional(readOnly = true)
     public List<CategoryGottenResult> getAll(String tenant) {
         String resolvedTenant = resolveTenant(tenant);
-        return categoryJpaRepository.findAllByTenant(resolvedTenant, YesNo.Y).stream()
-                .map(this::toResult)
-                .toList();
+        return categoryRepositoryPort.findAllByTenant(resolvedTenant, YesNo.Y);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CategoryGottenResult> getAllIncludeInactive(String tenant) {
         String resolvedTenant = resolveTenant(tenant);
-        return categoryJpaRepository.findAllByTenantIncludeInactive(resolvedTenant).stream()
-                .map(this::toResult)
-                .toList();
+        return categoryRepositoryPort.findAllByTenantIncludeInactive(resolvedTenant);
     }
 
     @Override
     @Transactional(readOnly = true)
     public CategoryGottenResult getById(Long id) {
-        return categoryJpaRepository.findByIdAndActiveFlag(id, YesNo.Y)
-                .map(this::toResult)
+        return categoryRepositoryPort.findByIdAndActiveFlag(id, YesNo.Y)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found with ID: " + id));
     }
 
@@ -67,11 +66,11 @@ public class SettingCategoryApplicationService implements
         }
 
         String tenant = resolveTenant(command.tenant());
-        if (categoryJpaRepository.existsByTenantAndCode(tenant, command.code().trim())) {
+        if (categoryRepositoryPort.existsByTenantAndCode(tenant, command.code().trim())) {
             throw new IllegalArgumentException("Category code already exists for tenant: " + tenant + ", code: " + command.code());
         }
 
-        SettingCategory category = SettingCategory.of(
+        CreateCategoryCommand normalizedCommand = new CreateCategoryCommand(
                 tenant,
                 command.code().trim(),
                 command.name().trim(),
@@ -79,8 +78,7 @@ public class SettingCategoryApplicationService implements
                 command.priorityNo()
         );
 
-        SettingCategory saved = categoryJpaRepository.save(category);
-        return toCreatedResult(saved);
+        return categoryRepositoryPort.save(normalizedCommand);
     }
 
     @Override
@@ -89,26 +87,15 @@ public class SettingCategoryApplicationService implements
             throw new IllegalArgumentException("Category ID cannot be null.");
         }
 
-        SettingCategory category = categoryJpaRepository.findById(command.id())
+        categoryRepositoryPort.findById(command.id())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found with ID: " + command.id()));
 
-        category.update(
-                command.name(),
-                command.description(),
-                command.priorityNo(),
-                command.activeFlag()
-        );
-
-        SettingCategory updated = categoryJpaRepository.save(category);
-        return toUpdatedResult(updated);
+        return categoryRepositoryPort.update(command);
     }
 
     @Override
     public void delete(Long id) {
-        categoryJpaRepository.findById(id).ifPresent(category -> {
-            category.delete();
-            categoryJpaRepository.save(category);
-        });
+        categoryRepositoryPort.deleteById(id);
     }
 
     private String resolveTenant(String tenant) {
@@ -117,47 +104,5 @@ public class SettingCategoryApplicationService implements
         }
         String contextTenant = UserContextHolder.getTenant();
         return (contextTenant != null && !contextTenant.isBlank()) ? contextTenant : "CW";
-    }
-
-    private CategoryGottenResult toResult(SettingCategory entity) {
-        return CategoryGottenResult.of(
-                entity.getId(),
-                entity.getTenant(),
-                entity.getCode(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.getPriorityNo(),
-                entity.getActiveFlag(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
-    }
-
-    private CategoryCreatedResult toCreatedResult(SettingCategory entity) {
-        return CategoryCreatedResult.of(
-                entity.getId(),
-                entity.getTenant(),
-                entity.getCode(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.getPriorityNo(),
-                entity.getActiveFlag(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
-    }
-
-    private CategoryUpdatedResult toUpdatedResult(SettingCategory entity) {
-        return CategoryUpdatedResult.of(
-                entity.getId(),
-                entity.getTenant(),
-                entity.getCode(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.getPriorityNo(),
-                entity.getActiveFlag(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
     }
 }

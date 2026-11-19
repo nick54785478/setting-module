@@ -2,14 +2,11 @@ package com.module.setting.application.service;
 
 import com.module.setting.application.port.out.CustomisationRepositoryPort;
 import com.module.setting.application.shared.context.UserContextHolder;
-import com.module.setting.infrastructure.persistence.customisation.entity.Customisation;
-import com.module.setting.infrastructure.persistence.customisation.vo.CustomisationScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -42,22 +39,20 @@ class CustomisationApplicationServiceTest {
     @Test
     @DisplayName("查詢個人化配置：若資料庫無紀錄，應回傳空清單")
     void testGetCustomisation_NotFound_ReturnsEmptyList() {
-        when(repositoryPort.findByScope(any())).thenReturn(Optional.empty());
+        when(repositoryPort.findActiveValue(any(), any(), any(), any())).thenReturn(Optional.empty());
 
         List<String> results = applicationService.getCustomisation("SettingComponent", "FieldView");
 
         assertThat(results).isEmpty();
-        verify(repositoryPort).findByScope(CustomisationScope.of("CW", "test.user@cw.com", "SettingComponent", "FieldView"));
+        verify(repositoryPort).findActiveValue("CW", "test.user@cw.com", "SettingComponent", "FieldView");
     }
 
     @Test
     @DisplayName("查詢個人化配置：若有紀錄，應正確以逗號分隔解析出欄位清單")
     void testGetCustomisation_Found_ReturnsParsedList() {
         String csv = "tenant,category,code,name,value";
-        CustomisationScope scope = CustomisationScope.of("CW", "test.user@cw.com", "SettingComponent", "FieldView");
-        Customisation customisation = Customisation.create(scope, csv);
-
-        when(repositoryPort.findByScope(scope)).thenReturn(Optional.of(customisation));
+        when(repositoryPort.findActiveValue("CW", "test.user@cw.com", "SettingComponent", "FieldView"))
+                .thenReturn(Optional.of(csv));
 
         List<String> results = applicationService.getCustomisation("SettingComponent", "FieldView");
 
@@ -65,31 +60,21 @@ class CustomisationApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("儲存個人化配置：應將欄位清單拼接為逗號分隔字串存入")
+    @DisplayName("儲存個人化配置：應將欄位清單拼接為逗號分隔字串傳予 port 儲存")
     void testSaveCustomisation_SavesAsCommaSeparatedString() {
         List<String> fields = List.of("code", "name", "value");
-
-        when(repositoryPort.findByScope(any())).thenReturn(Optional.empty());
 
         List<String> result = applicationService.saveCustomisation("SettingComponent", "FieldView", fields);
 
         assertThat(result).containsExactly("code", "name", "value");
-        ArgumentCaptor<Customisation> captor = ArgumentCaptor.forClass(Customisation.class);
-        verify(repositoryPort).save(captor.capture());
-
-        Customisation saved = captor.getValue();
-        assertThat(saved.getScope().getTenant()).isEqualTo("CW");
-        assertThat(saved.getScope().getUsername()).isEqualTo("test.user@cw.com");
-        assertThat(saved.getScope().getComponent()).isEqualTo("SettingComponent");
-        assertThat(saved.getScope().getType()).isEqualTo("FieldView");
-        assertThat(saved.getValue()).isEqualTo("code,name,value");
+        verify(repositoryPort).save("CW", "test.user@cw.com", "SettingComponent", "FieldView", "code,name,value");
     }
 
     @Test
-    @DisplayName("還原預設值：應呼叫 repositoryPort 依據 scope 刪除")
+    @DisplayName("還原預設值：應呼叫 repositoryPort 依據坐標刪除")
     void testResetCustomisation_CallsDelete() {
         applicationService.resetCustomisation("SettingComponent", "FieldView");
 
-        verify(repositoryPort).deleteByScope(CustomisationScope.of("CW", "test.user@cw.com", "SettingComponent", "FieldView"));
+        verify(repositoryPort).delete("CW", "test.user@cw.com", "SettingComponent", "FieldView");
     }
 }
