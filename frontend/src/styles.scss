@@ -52,6 +52,48 @@ html, body {
   padding: 0.45rem 0.75rem !important;
 }
 
+/* 圖示輸入框支援 (p-input-icon-left / p-input-icon-right) */
+.p-input-icon-left,
+.p-input-icon-right {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  width: 100%;
+
+  > i:first-child,
+  > .p-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    z-index: 1;
+    pointer-events: none;
+    font-size: 0.85rem;
+  }
+}
+
+.p-input-icon-left {
+  > i:first-child,
+  > .p-icon {
+    left: 0.75rem;
+  }
+  > input {
+    padding-left: 2.25rem !important;
+    width: 100%;
+  }
+}
+
+.p-input-icon-right {
+  > i:last-child,
+  > .p-icon {
+    right: 0.75rem;
+  }
+  > input {
+    padding-right: 2.25rem !important;
+    width: 100%;
+  }
+}
+
 /* 企業級主按鈕 (Corporate Blue) */
 .p-button {
   border-radius: 6px !important;

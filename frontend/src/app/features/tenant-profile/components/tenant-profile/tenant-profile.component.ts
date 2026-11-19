@@ -65,7 +65,7 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
   public queryTenant: string = 'CW';
   public readonly availableTenants = [
     { label: '預設基準租戶 (CW)', value: 'CW' },
-    { label: '國泰金融租戶 (CTBC)', value: 'CTBC' },
+    { label: '中信金融租戶 (CTBC)', value: 'CTBC' },
     { label: '北美企業租戶 (ACME)', value: 'ACME' },
     { label: '示範測試租戶 (DEMO)', value: 'DEMO' }
   ];

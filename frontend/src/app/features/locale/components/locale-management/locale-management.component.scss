@@ -193,13 +193,49 @@
         align-items: center;
 
         .filter-item {
+          display: flex;
+          align-items: center;
+
           &.search-input {
             flex: 1;
-            min-width: 260px;
+            min-width: 280px;
+
+            .search-input-wrapper {
+              position: relative;
+              width: 100%;
+              display: flex;
+              align-items: center;
+
+              .search-icon {
+                position: absolute;
+                left: 0.75rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #94a3b8;
+                font-size: 0.9rem;
+                pointer-events: none;
+                z-index: 2;
+              }
+
+              .search-input-field {
+                width: 100%;
+                padding: 0.45rem 0.75rem 0.45rem 2.25rem !important;
+                height: 36px;
+                border-radius: 6px;
+                font-size: 0.85rem;
+              }
+            }
           }
 
           &.status-select {
-            width: 170px;
+            width: 180px;
+
+            ::ng-deep .status-dropdown {
+              height: 36px;
+              display: flex;
+              align-items: center;
+              width: 100%;
+            }
           }
         }
 
@@ -207,6 +243,12 @@
           display: flex;
           gap: 0.5rem;
           align-items: center;
+
+          .action-query-btn,
+          .action-reset-btn {
+            height: 36px;
+            white-space: nowrap;
+          }
         }
       }
     }
