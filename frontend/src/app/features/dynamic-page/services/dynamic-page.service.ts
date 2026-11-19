@@ -109,7 +109,8 @@ export class DynamicPageService {
       params = params.set('tenant', tenant);
     }
 
-    return this.http.get<DynamicPageSettingResource>(`${this.baseUrl}/${pageCode}/schema`, { params }).pipe(
+    const cleanPageCode = pageCode?.endsWith('_SCHEMA') ? pageCode.replace('_SCHEMA', '') : pageCode;
+    return this.http.get<DynamicPageSettingResource>(`${this.baseUrl}/${cleanPageCode}/schema`, { params }).pipe(
       map((res) => {
         if (!res || !res.value || res.value === '[]' || res.value === '{}') {
           return this.getDefaultSchema();
@@ -140,8 +141,9 @@ export class DynamicPageService {
       params = params.set('tenant', tenant);
     }
 
+    const cleanPageCode = pageCode?.endsWith('_SCHEMA') ? pageCode.replace('_SCHEMA', '') : pageCode;
     const payload = JSON.stringify(fields, null, 2);
-    return this.http.put<DynamicPageSettingResource>(`${this.baseUrl}/${pageCode}/schema`, payload, {
+    return this.http.put<DynamicPageSettingResource>(`${this.baseUrl}/${cleanPageCode}/schema`, payload, {
       params,
       headers: { 'Content-Type': 'application/json' }
     });

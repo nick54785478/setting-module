@@ -123,8 +123,8 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.submitted = false;
 
-    // 1. 取得動態頁面 Schema (欄位定義)
-    this.dynamicPageService.getPageSchema(this.schemaCode, this.queryTenant).subscribe({
+    // 1. 取得動態頁面 Schema (欄位定義) - 統一以 pageCode ('TENANT_PROFILE') 查詢後端單一真實資料來源
+    this.dynamicPageService.getPageSchema(this.pageCode, this.queryTenant).subscribe({
       next: (fields) => {
         this.formFields = fields;
         this.buildFormControls(fields);
