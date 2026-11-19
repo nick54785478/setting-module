@@ -94,7 +94,7 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.currentTenant = this.tenantService.getCurrentTenant() || 'CW';
@@ -167,7 +167,7 @@ export class TenantProfileComponent implements OnInit, OnDestroy {
           // 若無資料，以初始預設值填入基本欄位
           const defaultData = {
             tenantCode: targetTenant,
-            tenantName: targetTenant === 'CW' ? '國泰世華銀行總行' : `客製租戶空間 (${targetTenant})`,
+            tenantName: targetTenant === 'CW' ? 'Chrono Weaver' : `客製租戶空間 (${targetTenant})`,
             contactEmail: targetTenant === 'CW' ? 'admin@cw.com' : `admin@${targetTenant.toLowerCase()}.com`,
             maxUsers: 500,
             tier: 'ENTERPRISE',

@@ -25,6 +25,7 @@
 
 *詳細架構概念與白皮書請參閱：
 * [Function Configurable 核心概念白皮書](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/function-configurable-concept.md)
+* [動態表單架構設計器與租戶自訂頁面架構規格書](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/dynamic-form-designer-architecture.md)
 * [個人化表格欄位顯示 (FieldView) 設計文件](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/table-column-customisation-design.md)
 * [租戶系統語系配置與切換維護 (Tenant Locale Management) 設計文件](file:///d:/桌面/ModuleWorkSpace/setting-module/doc/design/tenant-locale-management-design.md)
 
@@ -70,6 +71,7 @@ setting-module/
 │   ├── design/
 │   │   ├── function-configurable-concept.md # Function Configurable 核心架構概念白皮書
 │   │   ├── setting-architecture-sd.md       # 統一權威全景系統設計規格書 (v2.0.0)
+│   │   ├── dynamic-form-designer-architecture.md # 動態表單架構設計器與租戶自訂頁面架構規格書
 │   │   ├── table-column-customisation-design.md # 表格欄位自定義顯示 (FieldView) 設計文件
 │   │   └── tenant-locale-management-design.md  # 租戶系統語系配置與切換維護設計文件
 │   ├── guide/

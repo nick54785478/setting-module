@@ -22,7 +22,7 @@ export interface DynamicPageSettingResource {
 export class DynamicPageService {
   private readonly baseUrl = '/api/v1/settings/pages';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * 取得預設表單欄位範本 (涵蓋所有元件型態)
@@ -218,7 +218,7 @@ export class DynamicPageService {
         return [
           {
             tenantCode: currentTenant,
-            tenantName: currentTenant === 'CW' ? '國泰世華銀行總行' : `客製租戶空間 (${currentTenant})`,
+            tenantName: currentTenant === 'CW' ? 'Chrono Weaver' : `客製租戶空間 (${currentTenant})`,
             contactEmail: 'admin@cw.com',
             maxUsers: 500,
             tier: 'ENTERPRISE',
