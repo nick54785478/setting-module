@@ -99,6 +99,9 @@ export class DynamicDesignerComponent implements OnInit, OnDestroy {
   public newOptionLabel: string = '';
   public newOptionValue: string = '';
 
+  // Schema JSON 預覽區塊折疊狀態 (預設展開，支援點擊收合)
+  public isSchemaPreviewCollapsed: boolean = false;
+
   // 支援的元件型態選單
   public readonly fieldTypeOptions = [
     { label: '單行文字 (Text)', value: 'text' },
@@ -442,6 +445,13 @@ export class DynamicDesignerComponent implements OnInit, OnDestroy {
       case 'textarea': return 'contrast';
       default: return 'info';
     }
+  }
+
+  /**
+   * 切換 Schema JSON 預覽區塊展開/收合
+   */
+  public toggleSchemaPreview(): void {
+    this.isSchemaPreviewCollapsed = !this.isSchemaPreviewCollapsed;
   }
 
   private getEmptyFormModel() {

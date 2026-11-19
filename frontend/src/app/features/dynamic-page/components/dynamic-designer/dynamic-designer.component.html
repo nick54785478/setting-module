@@ -171,41 +171,43 @@
           </td>
 
           <!-- 操作按鈕 -->
-          <td class="text-center action-buttons">
-            <button
-              pButton
-              type="button"
-              icon="pi pi-arrow-up"
-              class="p-button-text p-button-sm"
-              [disabled]="i === 0"
-              pTooltip="上移"
-              (click)="moveUp(i)"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-arrow-down"
-              class="p-button-text p-button-sm mr-2"
-              [disabled]="i === fields.length - 1"
-              pTooltip="下移"
-              (click)="moveDown(i)"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-pencil"
-              class="p-button-text p-button-primary p-button-sm mr-1"
-              pTooltip="編輯欄位"
-              (click)="openEditFieldDialog(field, i)"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-trash"
-              class="p-button-text p-button-danger p-button-sm"
-              pTooltip="刪除欄位"
-              (click)="deleteField(i)"
-            ></button>
+          <td class="text-center">
+            <div class="row-actions">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-arrow-up"
+                class="p-button-text p-button-sm p-button-secondary action-btn"
+                [disabled]="i === 0"
+                pTooltip="上移"
+                (click)="moveUp(i)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-arrow-down"
+                class="p-button-text p-button-sm p-button-secondary action-btn"
+                [disabled]="i === fields.length - 1"
+                pTooltip="下移"
+                (click)="moveDown(i)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary action-btn"
+                pTooltip="編輯欄位"
+                (click)="openEditFieldDialog(field, i)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger action-btn"
+                pTooltip="刪除欄位"
+                (click)="deleteField(i)"
+              ></button>
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -220,16 +222,21 @@
     </p-table>
   </div>
 
-  <!-- 即時 Schema JSON 預覽卡片 -->
+  <!-- 即時 Schema JSON 預覽卡片 (支援點擊標題收合/展開) -->
   <div class="schema-preview-card mt-4">
-    <div class="preview-header">
+    <div class="preview-header" (click)="toggleSchemaPreview()" pTooltip="點擊以收合/展開 Schema JSON 預覽">
       <div class="preview-title">
-        <i class="pi pi-code mr-2 text-primary"></i>
-        <span>即時 Schema 結構預覽 (Schema JSON Inspector) - 租戶：{{ currentTenant }}</span>
+        <span class="code-icon-badge mr-2">
+          <i class="pi pi-code"></i>
+        </span>
+        <span class="preview-title-text">即時 Schema 結構預覽 (Schema JSON Inspector) - 租戶：{{ currentTenant }}</span>
       </div>
-      <span class="preview-badge">FormField[] 定義</span>
+      <div class="preview-header-right">
+        <span class="preview-badge mr-2">FormField[] 定義</span>
+        <i class="pi" [ngClass]="isSchemaPreviewCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'"></i>
+      </div>
     </div>
-    <div class="preview-body">
+    <div class="preview-body" *ngIf="!isSchemaPreviewCollapsed">
       <pre>{{ fields | json }}</pre>
     </div>
   </div>

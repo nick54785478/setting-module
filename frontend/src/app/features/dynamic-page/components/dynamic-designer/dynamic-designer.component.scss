@@ -127,20 +127,61 @@
     overflow: hidden;
     color: #e2e8f0;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    margin-top: 1.5rem;
 
     .preview-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.75rem 1.25rem;
+      padding: 0.85rem 1.25rem;
       background: #0f172a;
       border-bottom: 1px solid #334155;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background: #172554;
+      }
 
       .preview-title {
         display: flex;
         align-items: center;
-        font-size: 0.85rem;
-        font-weight: 600;
+        gap: 0.65rem;
+
+        .code-icon-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          background: rgba(59, 130, 246, 0.2);
+          border: 1px solid rgba(96, 165, 250, 0.3);
+          border-radius: 6px;
+          color: #60a5fa;
+
+          .pi {
+            font-size: 0.75rem;
+          }
+        }
+
+        .preview-title-text {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #f1f5f9;
+        }
+      }
+
+      .preview-header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .pi {
+          font-size: 0.8rem;
+          color: #94a3b8;
+          transition: transform 0.2s ease;
+        }
       }
 
       .preview-badge {
@@ -154,15 +195,16 @@
     }
 
     .preview-body {
-      padding: 1rem 1.25rem;
-      max-height: 260px;
+      padding: 1.25rem;
+      max-height: 280px;
       overflow-y: auto;
+      background: #0b1329;
 
       pre {
         margin: 0;
         font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
         font-size: 0.85rem;
-        line-height: 1.5;
+        line-height: 1.55;
         color: #34d399;
       }
     }

@@ -175,31 +175,33 @@
           </td>
 
           <!-- 操作：檢視、查出來編輯、刪除 -->
-          <td class="text-center action-buttons">
-            <button
-              pButton
-              type="button"
-              icon="pi pi-eye"
-              class="p-button-text p-button-sm mr-1"
-              pTooltip="檢視詳情"
-              (click)="openViewDialog(record)"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-pencil"
-              class="p-button-text p-button-primary p-button-sm mr-1"
-              pTooltip="查出並編輯"
-              (click)="openEditDialog(record, i)"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-trash"
-              class="p-button-text p-button-danger p-button-sm"
-              pTooltip="刪除紀錄"
-              (click)="confirmDelete(record, i)"
-            ></button>
+          <td class="text-center">
+            <div class="row-actions">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm p-button-secondary action-btn"
+                pTooltip="檢視詳情"
+                (click)="openViewDialog(record)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary action-btn"
+                pTooltip="查出並編輯"
+                (click)="openEditDialog(record, i)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger action-btn"
+                pTooltip="刪除紀錄"
+                (click)="confirmDelete(record, i)"
+              ></button>
+            </div>
           </td>
         </tr>
       </ng-template>
