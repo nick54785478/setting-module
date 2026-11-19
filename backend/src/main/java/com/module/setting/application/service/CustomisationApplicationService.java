@@ -26,7 +26,6 @@ import java.util.Optional;
  */
 @Slf4j
 @Service
-@Transactional
 public class CustomisationApplicationService implements
         GetCustomisationUseCase,
         SaveCustomisationUseCase,
@@ -69,6 +68,7 @@ public class CustomisationApplicationService implements
                 .toList();
     }
 
+    @Transactional
     @Override
     public List<String> saveCustomisation(String component, String type, List<String> fields) {
         String tenant = resolveTenant();
@@ -93,6 +93,7 @@ public class CustomisationApplicationService implements
         return fields != null ? fields : Collections.emptyList();
     }
 
+    @Transactional
     @Override
     public void resetCustomisation(String component, String type) {
         String tenant = resolveTenant();
