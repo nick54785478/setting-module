@@ -78,6 +78,10 @@ setting-module/
 │   │   ├── manual-setting-configuration-guide.md  # 系統設定與維度字典手動配置作業手冊
 │   │   ├── tenant-locale-configuration-guide.md   # 租戶語系自定義配置手冊與 Tenant 格式規範
 │   │   └── sidebar-menu-configuration-guide.md    # 側邊欄導航選單 Function Configurable 維護手冊
+│   ├── sql/
+│   │   ├── init-schema.sql        # 資料庫相關表結構 DDL (setting_category, setting, customisation)
+│   │   ├── init-data.sql          # 系統種子資料 DML (維度字典, 基準語系, 側邊選單, 動態表單)
+│   │   └── init-all.sql           # 一鍵完整建表與初始化種子資料腳本 (DDL + DML)
 │   └── BACKLOG.md             # 專案需求與技術債儲備清單 (BL-001)
 ├── .agents/                   # 架構與前後端開發規範準則 (AGENTS.md)
 └── README.md
