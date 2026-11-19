@@ -57,35 +57,41 @@
     </p>
 
     <!-- 頁面選擇與查詢工具列 -->
-    <div class="page-selector-bar mt-3 pt-3 border-top-1 surface-border flex align-items-center flex-wrap gap-2">
-      <label class="font-bold text-gray-700 text-sm mr-1">
-        <i class="pi pi-file-edit mr-1 text-primary"></i>選擇設計頁面：
-      </label>
-      <p-dropdown
-        [options]="availablePages"
-        [(ngModel)]="selectedPageCode"
-        (onChange)="querySchema()"
-        optionLabel="label"
-        optionValue="value"
-        styleClass="w-22rem p-inputtext-sm"
-      ></p-dropdown>
-      <button
-        pButton
-        type="button"
-        icon="pi pi-search"
-        label="查出架構"
-        class="p-button-sm p-button-outlined"
-        [loading]="loading"
-        (click)="querySchema()"
-      ></button>
-      <button
-        pButton
-        type="button"
-        icon="pi pi-plus-circle"
-        label="新增自訂頁面"
-        class="p-button-sm p-button-text"
-        (click)="openNewPageDialog()"
-      ></button>
+    <div class="page-selector-bar">
+      <div class="selector-field">
+        <label class="selector-label">
+          <i class="pi pi-file-edit text-primary"></i>
+          <span>選擇設計頁面：</span>
+        </label>
+        <p-dropdown
+          [options]="availablePages"
+          [(ngModel)]="selectedPageCode"
+          (onChange)="querySchema()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="selector-dropdown"
+        ></p-dropdown>
+      </div>
+
+      <div class="selector-actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-search"
+          label="查出架構"
+          class="p-button-outlined p-button-sm"
+          [loading]="loading"
+          (click)="querySchema()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus-circle"
+          label="新增自訂頁面"
+          class="p-button-outlined p-button-secondary p-button-sm"
+          (click)="openNewPageDialog()"
+        ></button>
+      </div>
     </div>
   </div>
 
